@@ -65,8 +65,9 @@ def video_to_frames(path_to_video, output_frames_dir):
 
     cap.release()
 
-def test_detection(image_path, output_path, candidate_labels=["bird", "flower pot"]):
+def detect_objects(image_path, output_path, candidate_labels=["bird", "flower pot"]):
     checkpoint = "google/owlv2-base-patch16-ensemble"
+    print(f"Detecting objects using {checkpoint} model checkpoint...")
     detector = pipeline(model=checkpoint, task="zero-shot-object-detection")
 
     image = Image.open(image_path).convert("RGB")
@@ -104,9 +105,11 @@ def create_parser():
     extract_frames_parser.add_argument("-o", "--output-dir", required=True, help="Output frames directory")
     extract_frames_parser.set_defaults(func=video_to_frames)
 
-    object_detection_parser = subparsers.add_parser("detect-object", help="Detect if candidate objects are present in an image")
+    object_detection_parser = subparsers.add_parser("detect-objects", help="Detect if candidate objects are present in the image")
     object_detection_parser.add_argument("-i", "--input", required=True, help="Input image file path")
-    object_detection_parser.set_defaults(func=test_detection)
+    object_detection_parser.add_argument("-o", "--output", required=True, help="Output image file path with detections")
+    object_detection_parser.add_argument("--candidates", required=False, help="Comma-separated list of candidate objects to detect")
+    object_detection_parser.set_defaults(func=detect_objects)
 
     return parser
 
@@ -114,12 +117,16 @@ def create_parser():
 def main():
     parser = create_parser()
     args = parser.parse_args()
+    print("Args:", args)
+    print(f"Work dir: {os.getcwd()}")
+
     if args.command == "extract-clip":
         args.func(args.input, args.output, args.start, args.end)
     elif args.command == "extract-frames":
         args.func(args.input, args.output_dir)
-    elif args.command == "detect-object":
-        args.func(args.input)
+    elif args.command == "detect-objects":
+        candidate_labels = [obj.strip() for obj in args.candidates.split(',')]
+        args.func(args.input, args.output, candidate_labels)
 
 if __name__ == "__main__":
     main()
