@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import argparse
-import os
 from pathlib import Path
 import sys
 from typing import List
@@ -160,7 +159,7 @@ def main():
     cli = create_cli()
     args = cli.parse_args()
     print("Args:", args)
-    print(f"Work dir: {os.getcwd()}")
+    print(f"Work dir: {Path.cwd()}")
 
     status = 0
     if args.command == "extract-clip":
