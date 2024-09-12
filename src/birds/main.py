@@ -9,11 +9,21 @@ import cv2
 from PIL import Image, ImageDraw
 from transformers import pipeline
 
+from birds.lib.logger import get_logger, update_app_verbosity_level
+
+
+logger = get_logger("main", verbosity=0)
+
 
 def extract_clip(input_video_file, output_video_file, start_time, end_time):
     input_video_file = Path(input_video_file).resolve()
+    logger.info(f"Extracting a clip from '{input_video_file}' to '{output_video_file}' ({start_time}-{end_time}s)")
     if not input_video_file.exists():
-        print(f"File '{input_video_file.name}' does not exist at '{input_video_file.parent}'")
+        logger.error(f"File '{input_video_file.name}' does not exist at '{input_video_file.parent}'")
+        return 1
+
+    if start_time > end_time:
+        logger.error(f"Clip start time ({start_time}s) can't be larger than its end time ({end_time}s)")
         return 1
 
     # 'cap' is short for "capture" and refers to the video capture object created by cv2.VideoCapture.
@@ -22,9 +32,9 @@ def extract_clip(input_video_file, output_video_file, start_time, end_time):
 
     # Retrieve the number of frames per second (fps) from the video, useful for timing calculations.
     fps = cap.get(cv2.CAP_PROP_FPS)
-    print("Video FPS:", fps)
+    logger.info(f"Input video FPS: {fps}")
 
-    print("Skip to second ", start_time)
+    logger.debug(f"Skip to second: {start_time}")
     # Calculate the start position in the video in milliseconds based on the given start time in seconds.
     start_msec = start_time * 1000
     # Set the current position of the video capture to 'start_msec', which allows us to start reading from this point.
@@ -63,15 +73,15 @@ def extract_clip(input_video_file, output_video_file, start_time, end_time):
 def split_video_clip_to_frames(video_file, output_dir):
     video_file = Path(video_file).resolve()
     if not video_file.exists():
-        print(f"File '{video_file.name}' does not exist at '{video_file.parent}'")
+        logger.error(f"File '{video_file.name}' does not exist at '{video_file.parent}'")
         return 1
 
-    print(f"Extracting image frames from '{video_file}'")
+    logger.info(f"Extracting image frames from '{video_file}'")
 
     output_dir = Path(output_dir).resolve()
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
-    print(f"Saving frames to '{output_dir}'")
+    logger.info(f"Saving frames to '{output_dir}'")
 
     cap = cv2.VideoCapture(str(video_file))
     count = 0
@@ -86,18 +96,18 @@ def split_video_clip_to_frames(video_file, output_dir):
         count += 1
 
     cap.release()
-    print(f"Extracted {count} frames from '{video_file.name}'")
+    logger.info(f"Extracted {count} frames from '{video_file.name}'")
 
     return 0
 
 def detect_objects(input_image_file: str, output_image_file: str, candidate_labels: List[str]):
     input_image_file = Path(input_image_file).resolve()
     if not input_image_file.exists():
-        print(f"File '{input_image_file.name}' does not exist at '{input_image_file.parent}'")
+        logger.error(f"File '{input_image_file.name}' does not exist at '{input_image_file.parent}'")
         return 1
 
     checkpoint = "google/owlv2-base-patch16-ensemble"
-    print(f"Detecting objects: '{candidate_labels}' using '{checkpoint}' model checkpoint...")
+    logger.info(f"Detecting objects: '{candidate_labels}' using '{checkpoint}' model checkpoint...")
     detector = pipeline(model=checkpoint, task="zero-shot-object-detection")
 
     image = Image.open(str(input_image_file)).convert("RGB")
@@ -105,7 +115,7 @@ def detect_objects(input_image_file: str, output_image_file: str, candidate_labe
         image,
         candidate_labels=candidate_labels,
     )
-    print(predictions)
+    logger.info(f"Result: {predictions}")
 
     draw = ImageDraw.Draw(image)
     for prediction in predictions:
@@ -126,7 +136,7 @@ def detect_objects(input_image_file: str, output_image_file: str, candidate_labe
 
 def create_cli():
     parser = argparse.ArgumentParser(description="Video processing and object detection tool")
-    parser.add_argument("-v", action="count", help="Increase output verbosity (use -v, -vv, or -vvv for more detailed output)")
+    parser.add_argument("-v", action="count", dest="verbosity", help="Increase output verbosity (use -v, -vv, or -vvv for more detailed output)")
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -158,8 +168,10 @@ def create_cli():
 def main():
     cli = create_cli()
     args = cli.parse_args()
-    print("Args:", args)
-    print(f"Work dir: {Path.cwd()}")
+    update_app_verbosity_level(args.verbosity or 0)
+
+    logger.debug(f"CLI call args: {args}")
+    logger.debug(f"Work dir: {Path.cwd()}")
 
     status = 0
     if args.command == "extract-clip":
