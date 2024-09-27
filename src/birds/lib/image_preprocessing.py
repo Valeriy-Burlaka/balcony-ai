@@ -6,8 +6,7 @@ import tensorflow as tf
 
 print(f"Process PID: {os.getpid()}")
 
-target_size = 640
-gray_fill = (128, 128, 128)
+COLOR_GRAY = (128, 128, 128)
 
 def split_1080p_image_into_6_tiles(image: np.ndarray):
     # the initial idea was to have a specialized function to convert 1080p (1920x1080) videos to
@@ -23,7 +22,7 @@ def split_1080p_image_into_6_tiles(image: np.ndarray):
 def letterbox_landscape_image_to_square(image: np.ndarray) -> np.ndarray:
     img_height, img_width = image.shape[:2]
     target_size = img_width
-    full_square_img = np.full((target_size, target_size, 3), gray_fill, dtype=np.uint8)
+    full_square_img = np.full((target_size, target_size, 3), COLOR_GRAY, dtype=np.uint8)
     vertical_offset = (target_size - img_height) // 2
 
     full_square_img[vertical_offset:vertical_offset+img_height, 0:img_width] = image[0:img_height, 0:img_width]
@@ -40,7 +39,7 @@ def downsample_image(image: np.ndarray, target_size: int) -> np.ndarray:
 def read_image(image_path: str) -> np.ndarray:
     return cv2.imread(image_path)
 
-def preprocess_image(image: np.ndarray) -> np.ndarray:
+def preprocess_image(image: np.ndarray, target_size: int) -> np.ndarray:
     # Convert the image from BGR to RGB as required by the TFLite model.
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
