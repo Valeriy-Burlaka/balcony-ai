@@ -55,6 +55,11 @@ extra-dependencies = [
 [tool.hatch.envs.types.scripts]
 check = "mypy --install-types --non-interactive {args:src/birds tests}"
 
+[tool.hatch.envs.jupyter]
+extra-dependencies = [
+  "jupyterlab",
+]
+
 [tool.coverage.run]
 source_pkgs = ["birds", "tests"]
 branch = true
