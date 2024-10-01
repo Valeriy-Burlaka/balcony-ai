@@ -18,9 +18,11 @@ from birds.lib.coco_labels import COCO_LABELS
 from birds.lib.utils import timer
 
 
-IMAGE_PATH = "test-detection/clips-split-by-frames/frame00075.png"
-# model_path = kagglehub.model_download("tensorflow/efficientdet/tensorFlow2/d1")
-MODEL_PATH = Path("~/.cache/kagglehub/models/tensorflow/efficientdet/tensorFlow2/d1/1").expanduser()
+# IMAGE_PATH = "test-detection/clips-split-by-frames/frame00075.png"
+INPUT_IMAGES = [f"test-detection/clips-split-by-frames/frame{str(num).zfill(5)}.png" for num in range(65, 775)]
+MODEL_VERSION = "d7"
+# MODEL_PATH = kagglehub.model_download(f"tensorflow/efficientdet/tensorFlow2/{MODEL_VERSION}")
+MODEL_PATH = Path(f"~/.cache/kagglehub/models/tensorflow/efficientdet/tensorFlow2/{MODEL_VERSION}/1").expanduser()
 INPUT_IMG_WIDTH = 1920
 INPUT_IMG_HEIGHT = 1080
 IMG_SIZE_FOR_DETECTOR = 640
@@ -76,34 +78,39 @@ def get_annotated_img_objects(img, boxes, scores, classes, score_threshold=0.25,
     return img, num_objects
 
 
-orig_image = read_image(IMAGE_PATH)
-cv2.imwrite("./original.png", orig_image)
-
 with timer("Loading the model"):
     model = tf.saved_model.load(MODEL_PATH)
 
-with timer("Preprocessing the image"):
+output_dir = f"test-detection/model-outputs/efficientdet-{MODEL_VERSION}"
+if not Path(output_dir).exists():
+    Path(output_dir).mkdir(parents=True)
+
+for image_path in INPUT_IMAGES:
+    print(f"Now processing image '{image_path}'")
+
+    img_name = Path(image_path).name
+    orig_image = read_image(image_path)
     preprocessed = preprocess_image(orig_image, target_size=IMG_SIZE_FOR_DETECTOR)
 
-cv2.imwrite("./preprocessed.png", preprocessed)
+    cv2.imwrite(f"{output_dir}/preprocessed-{img_name}", preprocessed)
 
-normalized = normalize_for_tf(image=preprocessed)
+    normalized = normalize_for_tf(image=preprocessed)
 
-with timer("Object detection"):
-    detector_output = model(normalized)
+    with timer("Object detection"):
+        detector_output = model(normalized)
 
-boxes = detector_output["detection_boxes"][0].numpy()
-classes = detector_output["detection_classes"][0].numpy()
-scores = detector_output["detection_scores"][0].numpy()
+    boxes = detector_output["detection_boxes"][0].numpy()
+    classes = detector_output["detection_classes"][0].numpy()
+    scores = detector_output["detection_scores"][0].numpy()
 
-labeled_image, num_detected_objects = get_annotated_img_objects(
-    img=orig_image,
-    boxes=boxes,
-    scores=scores,
-    classes=classes,
-    label_map=COCO_LABELS,
-)
-cv2.imwrite("./original_labeled.png", labeled_image)
+    labeled_image, num_detected_objects = get_annotated_img_objects(
+        img=orig_image,
+        boxes=boxes,
+        scores=scores,
+        classes=classes,
+        label_map=COCO_LABELS,
+    )
+    cv2.imwrite(f"{output_dir}/labeled-{img_name}", labeled_image)
 
 # Sandbox: process a single, top-score detection and draw its detection box over both
 # preprocessed (640x640) and original (1920x1080) images.
