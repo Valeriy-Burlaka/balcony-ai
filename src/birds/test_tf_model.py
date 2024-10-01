@@ -15,6 +15,7 @@ from birds.lib.image_preprocessing import (
     BGR_COLOR_RED
 )
 from birds.lib.coco_labels import COCO_LABELS
+from birds.lib.utils import timer
 
 
 IMAGE_PATH = "test-detection/clips-split-by-frames/frame00075.png"
@@ -75,32 +76,25 @@ def get_annotated_img_objects(img, boxes, scores, classes, score_threshold=0.25,
     return img, num_objects
 
 
-start_time = time.time()
-model = tf.saved_model.load(MODEL_PATH)
-end_time = time.time()
-print(f"Loading the model took {end_time - start_time} s.")
-
-
 orig_image = read_image(IMAGE_PATH)
 cv2.imwrite("./original.png", orig_image)
 
-start_time = time.time()
-preprocessed = preprocess_image(orig_image, target_size=IMG_SIZE_FOR_DETECTOR)
-end_time = time.time()
-print(f"Preprocessing the image took {end_time - start_time} s.")
+with timer("Loading the model"):
+    model = tf.saved_model.load(MODEL_PATH)
+
+with timer("Preprocessing the image"):
+    preprocessed = preprocess_image(orig_image, target_size=IMG_SIZE_FOR_DETECTOR)
+
 cv2.imwrite("./preprocessed.png", preprocessed)
 
 normalized = normalize_for_tf(image=preprocessed)
 
-start_time = time.time()
-detector_output = model(normalized)
-end_time = time.time()
-print(f"Object detection took {end_time - start_time} s.")
+with timer("Object detection"):
+    detector_output = model(normalized)
 
 boxes = detector_output["detection_boxes"][0].numpy()
 classes = detector_output["detection_classes"][0].numpy()
 scores = detector_output["detection_scores"][0].numpy()
-
 
 labeled_image, num_detected_objects = get_annotated_img_objects(
     img=orig_image,
