@@ -91,3 +91,6 @@ COCO_LABELS = {
   90: "toothbrush",
   91: "hair brush",
 }
+
+ALL_ANIMATE_CREATURES_CLASSES = [1, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+BIRD_CLASS = 16
