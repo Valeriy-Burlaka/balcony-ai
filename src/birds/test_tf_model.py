@@ -102,6 +102,18 @@ class DetectionResult:
         return self.image_array
 
     @property
+    def bird_confidence_mean(self) -> float:
+        return statistics.mean(self.bird_confidence_scores) if self.bird_confidence_scores else .0
+
+    @property
+    def bird_confidence_max(self) -> float:
+        return max(self.bird_confidence_scores) if self.bird_confidence_scores else .0
+
+    @property
+    def bird_confidence_min(self) -> float:
+        return min(self.bird_confidence_scores) if self.bird_confidence_scores else .0
+
+    @property
     def result_categories(self) -> list[ResultCategory]:
         if not self.annotated:
             raise RuntimeWarning("Image is not annotated. Call .annotate_birds_and_other_animate_creatures() instance method first")
@@ -152,30 +164,39 @@ class DetectionResult:
 
             cv2.imwrite(f"{str(p)}", self.image_array)
 
-# @dataclass
-class ModelPerformanceStats:
-    # bird_detection_rate: float
-    # confidence_mean: float
-    # confidence_median: float
+@dataclass
+class ModelPerformanceSummaryStats:
+    model_version: str
+    # Mean detection rate. Helpful for testing the uniform datasets where all frames in the datasets
+    # are in the same category (i.e., either "bird" or "no bird").
+    bird_detection_rate: float
+    # A complementary metric for 'bird_detection_rate' metric. Helpful for testing the datasets where
+    # all frames are known to have the same amount of birds.
+    num_birds_detected_mean: float
+    # A median calculates across the max confidence score of each frame
+    bird_confidence_max_median: float
+    # A median calculates across the min confidence score of each frame
+    bird_confidence_min_median: float
+
     # confidence_std_dev: float
-    # other_creatures_detection_rate: float
+    # Capturing the detection rate for cats, dogs, cows, and other noise.
+    other_creatures_detection_rate: float
 
-    def __init__(self, model_version: str, results: list[DetectionResult]):
-        self.version = model_version
-        self.results = results
+    # Mean detection time for a model.
+    processing_time_mean: float
 
-def summarize_model_results(results: list[tuple[int, float, int]]) -> ModelPerformanceStats:
-    bird_detections = [r[0] for r in results]
-    confidence_scores = [r[1] for r in results]
-    other_creaturs_detections = [r[2] for r in results]
+    @classmethod
+    def summarize_detection_results(cls, model_version: str, results: list[DetectionResult]) -> "ModelPerformanceSummaryStats":
+        return cls(
+            model_version=model_version,
+            bird_detection_rate=statistics.mean([int(bool(r.num_birds_detected)) for r in results]),
+            num_birds_detected_mean=statistics.mean([r.num_birds_detected for r in results]),
+            bird_confidence_max_median=statistics.median([r.bird_confidence_max for r in results]),
+            bird_confidence_min_median=statistics.median([r.bird_confidence_min for r in results]),
+            other_creatures_detection_rate=statistics.mean([r.num_other_creatures_detected for r in results]),
+            processing_time_mean=statistics.mean([r.t_spent for r in results])
+        )
 
-    return ModelPerformanceStats(
-        bird_detection_rate=statistics.mean(bird_detections),
-        confidence_mean=statistics.mean(confidence_scores) if confidence_scores else 0,
-        confidence_median=statistics.median(confidence_scores) if confidence_scores else 0,
-        confidence_std_dev=statistics.stdev(confidence_scores) if len(confidence_scores) > 1 else 0,
-        other_creatures_rate=statistics.mean(other_creaturs_detections)
-    )
 
 def denormalize_box_coordinates(box: Box) -> Box:
     # scale_back_coeff = INPUT_IMG_WIDTH / IMG_SIZE_FOR_DETECTOR
@@ -274,12 +295,12 @@ def annotate_birds_and_other_animate_creatures(img, boxes, scores, classes, scor
 results = {}
 
 # input_image_frame_range = range(65, 775)
-input_image_frame_range = range(75, 80)
+input_image_frame_range = range(75, 85)
 # input_image_frame_range = range(75, 76)
 input_images = [f"test-detection/clips-split-by-frames/frame{str(num).zfill(5)}.png" for num in input_image_frame_range]
 
 # for model_version in ["d0", "d1", "d2"]:
-for model_version in ["d0"]:
+for model_version in ["d1", "d2"]:
     print(f"Testing frames [{input_image_frame_range}] with '{model_version}'")
     with timeit("Loading the model"):
         model_path = Path(f"~/.cache/kagglehub/models/tensorflow/efficientdet/tensorFlow2/{model_version}/1").expanduser()
@@ -302,9 +323,7 @@ for model_version in ["d0"]:
 
         boxes = detector_output["detection_boxes"][0].numpy()
         classes = detector_output["detection_classes"][0].numpy()
-        print("Type classes:", type(boxes))
         scores = detector_output["detection_scores"][0].numpy()
-        print("Type scores:", type(boxes))
 
         detection_result = DetectionResult(
             model_version=model_version,
@@ -327,6 +346,14 @@ for model_version, results in results.items():
     logger.info("Saving labeled images to the file system")
     for r in results:
         r.save(base_dir=str(model_output_dir))
+
+    summary_stats = ModelPerformanceSummaryStats.summarize_detection_results(
+        model_version=model_version,
+        results=results)
+
+    print(summary_stats)
+
+    # print(vars(summary_stats))
 
 
 # print("Model Version\tImage Name\tNum Birds Detected\tNum Other Creatures Detected")
