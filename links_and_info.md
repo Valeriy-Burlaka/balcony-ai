@@ -7,6 +7,10 @@
 * Tit - синиця
 * Tutledove - горлиця
 
+Not seen yet:
+
+* Bullfinch - снігур
+
 # Sounds
 
 ## Magpie
