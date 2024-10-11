@@ -197,7 +197,6 @@ class ModelPerformanceSummaryStats:
             processing_time_mean=statistics.mean([r.t_spent for r in results])
         )
 
-
 def denormalize_box_coordinates(box: Box) -> Box:
     # scale_back_coeff = INPUT_IMG_WIDTH / IMG_SIZE_FOR_DETECTOR
     # Transform tensor coordinates (0...1) back to the coordinates on a 1920x1920 square image.
@@ -292,22 +291,24 @@ def annotate_birds_and_other_animate_creatures(img, boxes, scores, classes, scor
 # TODO: Write csv with performance stats & bird/no-bird summary
 # TODO: Replace "range of images" with input dataset dir
 
-results = {}
-
 # input_image_frame_range = range(65, 775)
-input_image_frame_range = range(75, 85)
+input_image_frame_range = range(75, 106)
 # input_image_frame_range = range(75, 76)
 input_images = [f"test-detection/clips-split-by-frames/frame{str(num).zfill(5)}.png" for num in input_image_frame_range]
 
-# for model_version in ["d0", "d1", "d2"]:
-for model_version in ["d1", "d2"]:
-    print(f"Testing frames [{input_image_frame_range}] with '{model_version}'")
+for model_version in ["d4"]:
+# for model_version in ["d1", "d2"]:
+# for model_version in ["d1", "d2", "d3", "d4"]:
+    print(f"Testing {len(input_image_frame_range)} frames [{input_image_frame_range}] with '{model_version}'")
     with timeit("Loading the model"):
         model_path = Path(f"~/.cache/kagglehub/models/tensorflow/efficientdet/tensorFlow2/{model_version}/1").expanduser()
         model = tf.saved_model.load(model_path)
 
-    for image_path in input_images:
-        print(f"Now processing image '{image_path}'")
+    results = []
+
+    for job_index, image_path in enumerate(input_images):
+        if job_index % (len(input_images) // 10) == 0:
+            print(f"Now processing image '{image_path}'")
 
         image_fname = Path(image_path).name
         orig_image = read_image(image_path)
@@ -336,14 +337,13 @@ for model_version in ["d1", "d2"]:
             score_threshold=0.2)
         detection_result.annotate_birds_and_other_animate_creatures()
 
-        results.setdefault(model_version, []).append(detection_result)
+        results.append(detection_result)
 
-for model_version, results in results.items():
     model_output_dir = Path(f"test-detection/model-outputs/efficientdet-{model_version}")
     if not model_output_dir.exists():
         model_output_dir.mkdir(parents=True)
 
-    logger.info("Saving labeled images to the file system")
+    logger.info(f"{model_version}: Saving labeled images to the file system")
     for r in results:
         r.save(base_dir=str(model_output_dir))
 
@@ -352,10 +352,4 @@ for model_version, results in results.items():
         results=results)
 
     print(summary_stats)
-
-    # print(vars(summary_stats))
-
-
-# print("Model Version\tImage Name\tNum Birds Detected\tNum Other Creatures Detected")
-# for r in results:
-#     print(f"{r[0]}\t\t{r[1]}\t{r[2]}\t\t\t{r[3]}")
+    print("\n")
