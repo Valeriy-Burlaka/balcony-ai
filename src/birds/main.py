@@ -183,7 +183,10 @@ def main():
     if args.command == "extract-clip":
         status = extract_clip(args.input, args.output, args.start, args.end)
     elif args.command == "extract-frames":
-        status = split_video_clip_to_frames(video_file=args.input, output_dir=args.output_dir)
+        status = split_video_clip_to_frames(
+            video_file=args.input,
+            output_dir=args.output_dir,
+            image_format=args.format)
     elif args.command == "detect-objects":
         candidate_labels = [obj.strip() for obj in args.candidates.split(',')]
         status = detect_objects(args.input, args.output, candidate_labels)
