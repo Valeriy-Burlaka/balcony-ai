@@ -10,6 +10,7 @@ def map_verbosity_level_to_logging_level(verbosity: int) -> int:
         0: logging.ERROR,
         1: logging.WARNING,
         2: logging.INFO,
+        3: logging.DEBUG,
     }
 
     return level_map.get(verbosity, logging.DEBUG)
@@ -24,13 +25,11 @@ def get_logger(name: str, verbosity: int):
     # This is a simplistic interpretation of the Canonocal CLI guidelines
     #   (see https://discourse.ubuntu.com/t/cli-verbosity-levels/26973).
     level = map_verbosity_level_to_logging_level(verbosity)
-    logging.basicConfig(level=level, format=LOGGER_FORMAT)
 
     formatter = logging.Formatter(LOGGER_FORMAT)
 
     ch = logging.StreamHandler()
     ch.setFormatter(formatter)
-
     ch.setLevel(level)
     logger.addHandler(ch)
 
@@ -45,4 +44,4 @@ def get_logger(name: str, verbosity: int):
 
 def update_app_verbosity_level(verbosity: int):
     level = map_verbosity_level_to_logging_level(verbosity)
-    logging.basicConfig(level=level, format=LOGGER_FORMAT)
+    logging.basicConfig(level=level)

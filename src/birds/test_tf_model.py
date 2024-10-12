@@ -6,32 +6,26 @@ from typing import NamedTuple
 from pathlib import Path
 
 import cv2
-# import kagglehub
 
 import numpy as np
-import tensorflow as tf
 
 from birds.lib.image_preprocessing import (
     normalize_for_tf,
     preprocess_image,
     read_image,
-    # show_image,
-    BGR_COLOR_RED
+    BGR_COLOR_LIME,
+    BGR_COLOR_RED,
 )
 from birds.lib.coco_labels import COCO_LABELS, BIRD_CLASS, ALL_ANIMATE_CREATURES_CLASSES
-from birds.lib.logger import get_logger
+from birds.lib.logger import get_logger, update_app_verbosity_level
+from birds.lib.tf_models import load_model
 from birds.lib.utils import timeit
 
 
 logger = get_logger("test_tf_pipeline", verbosity=2)
+update_app_verbosity_level(verbosity=2)
 
 
-# IMAGE_PATH = "test-detection/clips-split-by-frames/frame00075.png"
-# INPUT_IMAGE_FRAME_RANGE = range(65, 775)
-# INPUT_IMAGES = [f"test-detection/clips-split-by-frames/frame{str(num).zfill(5)}.png" for num in INPUT_IMAGE_FRAME_RANGE]
-# MODEL_VERSION = "d7"
-# MODEL_PATH = kagglehub.model_download(f"tensorflow/efficientdet/tensorFlow2/{MODEL_VERSION}")
-# MODEL_PATH = Path(f"~/.cache/kagglehub/models/tensorflow/efficientdet/tensorFlow2/{MODEL_VERSION}/1").expanduser()
 INPUT_IMG_WIDTH = 1920
 INPUT_IMG_HEIGHT = 1080
 IMG_SIZE_FOR_DETECTOR = 640
@@ -268,7 +262,7 @@ def annotate_birds_and_other_animate_creatures(img, boxes, scores, classes, scor
                         (box.x_min, box.y_min - 10),
                         fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                         fontScale=0.9,
-                        color=(36,255,12),
+                        color=BGR_COLOR_LIME,
                         thickness=2)
         else:
             continue
@@ -279,30 +273,21 @@ def annotate_birds_and_other_animate_creatures(img, boxes, scores, classes, scor
         num_other_creatures_detected=other_creatures,
         bird_confidence_scores=bird_confidence_scores)
 
-# with timer("Loading the model"):
-#     model = tf.saved_model.load(MODEL_PATH)
-
-# output_dir = f"test-detection/model-outputs/efficientdet-{MODEL_VERSION}"
-# if not Path(output_dir).exists():
-#     Path(output_dir).mkdir(parents=True)
-
-
-
 # TODO: Write csv with performance stats & bird/no-bird summary
 # TODO: Replace "range of images" with input dataset dir
 
 # input_image_frame_range = range(65, 775)
-input_image_frame_range = range(75, 106)
-# input_image_frame_range = range(75, 76)
+input_image_frame_range = range(75, 116)
 input_images = [f"test-detection/clips-split-by-frames/frame{str(num).zfill(5)}.png" for num in input_image_frame_range]
 
-for model_version in ["d4"]:
+# "d4" is buggy (zero detection rate)
+# for model_version in ["d4"]:
 # for model_version in ["d1", "d2"]:
-# for model_version in ["d1", "d2", "d3", "d4"]:
-    print(f"Testing {len(input_image_frame_range)} frames [{input_image_frame_range}] with '{model_version}'")
-    with timeit("Loading the model"):
-        model_path = Path(f"~/.cache/kagglehub/models/tensorflow/efficientdet/tensorFlow2/{model_version}/1").expanduser()
-        model = tf.saved_model.load(model_path)
+for model_version in ["d5", "d6", "d7"]:
+    model = load_model(family="efficientdet", version=model_version)
+    logger.info(
+        f"Testing {len(input_image_frame_range)} frames [{input_image_frame_range}] \
+          with 'efficientdet/{model_version}'")
 
     results = []
 

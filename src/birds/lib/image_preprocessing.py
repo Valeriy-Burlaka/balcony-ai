@@ -8,6 +8,7 @@ print(f"Process PID: {os.getpid()}")
 
 COLOR_GRAY = (128, 128, 128)
 BGR_COLOR_RED = (0, 0, 255)
+BGR_COLOR_LIME = (36, 255, 12)
 
 def split_1080p_image_into_6_tiles(image: np.ndarray):
     # the initial idea was to have a specialized function to convert 1080p (1920x1080) videos to
