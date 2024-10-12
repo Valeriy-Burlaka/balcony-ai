@@ -36,16 +36,17 @@ path = "src/birds/__about__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
+  "kagglehub",
   "numpy",
   "opencv-python-headless",
   "pillow",
+  "rich",
   "scipy",
   "timm",
   "torch",
   "torchvision",
   "torchaudio",
   "transformers",
-  "kagglehub",
 ]
 
 [tool.hatch.envs.types]

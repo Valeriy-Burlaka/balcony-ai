@@ -1,6 +1,8 @@
 import statistics
+import sys
 
 from dataclasses import dataclass, field
+from datetime import datetime as dt
 from enum import auto, Enum
 from typing import NamedTuple
 from pathlib import Path
@@ -8,6 +10,8 @@ from pathlib import Path
 import cv2
 
 import numpy as np
+from rich.console import Console
+from rich.table import Table
 
 from birds.lib.image_preprocessing import (
     normalize_for_tf,
@@ -191,6 +195,36 @@ class ModelPerformanceSummaryStats:
             processing_time_mean=statistics.mean([r.t_spent for r in results])
         )
 
+    @classmethod
+    def display_stats_table(stats_list: list["ModelPerformanceSummaryStats"]):
+        table = Table(title="Model Performance Summary Stats")
+
+        # Add columns
+        table.add_column("Metric", style="cyan", no_wrap=True)
+        for stat in stats_list:
+            table.add_column(f"{stat.model_version}", style="magenta")
+
+        # Add rows
+        metrics = [
+            "Bird Detection Rate",
+            "Num Birds Detected Mean",
+            "Bird Confidence Max Median",
+            "Bird Confidence Min Median",
+            "Other Creatures Detection Rate",
+            "Processing Time Mean"
+        ]
+
+        for metric in metrics:
+            row = [metric]
+            for stat in stats_list:
+                value = getattr(stat, metric.lower().replace(" ", "_"))
+                row.append(f"{value:.4f}")
+            table.add_row(*row)
+
+        # Print the table
+        console = Console()
+        console.print(table)
+
 def denormalize_box_coordinates(box: Box) -> Box:
     # scale_back_coeff = INPUT_IMG_WIDTH / IMG_SIZE_FOR_DETECTOR
     # Transform tensor coordinates (0...1) back to the coordinates on a 1920x1920 square image.
@@ -273,30 +307,32 @@ def annotate_birds_and_other_animate_creatures(img, boxes, scores, classes, scor
         num_other_creatures_detected=other_creatures,
         bird_confidence_scores=bird_confidence_scores)
 
-# TODO: Write csv with performance stats & bird/no-bird summary
-# TODO: Replace "range of images" with input dataset dir
+input_dir = Path(sys.argv[1])
+if not input_dir.exists():
+    raise RuntimeError(f"No such dir exists: '{input_dir}'")
 
-# input_image_frame_range = range(65, 775)
-input_image_frame_range = range(75, 116)
-input_images = [f"test-detection/clips-split-by-frames/frame{str(num).zfill(5)}.png" for num in input_image_frame_range]
+input_images = [img for img in input_dir.glob("*")]
+logger.info(f"Testing {len(input_images)} images")
+
+experiment_id = dt.now().strftime("%Y-%m-%dT%H-%M")
+
+all_summary_stats = []
 
 # "d4" is buggy (zero detection rate)
 # for model_version in ["d4"]:
+
 # for model_version in ["d1", "d2"]:
 for model_version in ["d5", "d6", "d7"]:
     model = load_model(family="efficientdet", version=model_version)
-    logger.info(
-        f"Testing {len(input_image_frame_range)} frames [{input_image_frame_range}] \
-          with 'efficientdet/{model_version}'")
+    logger.info(f"Now testing images with 'efficientdet/{model_version}'")
 
-    results = []
+    model_results = []
 
     for job_index, image_path in enumerate(input_images):
         if job_index % (len(input_images) // 10) == 0:
             print(f"Now processing image '{image_path}'")
 
-        image_fname = Path(image_path).name
-        orig_image = read_image(image_path)
+        orig_image = read_image(image_path.resolve().as_posix())
         preprocessed = preprocess_image(orig_image, target_size=IMG_SIZE_FOR_DETECTOR)
 
         # cv2.imwrite(f"{output_dir}/preprocessed-{image_name}", preprocessed)
@@ -305,36 +341,37 @@ for model_version in ["d5", "d6", "d7"]:
 
         with timeit("Object detection") as t_spent:
             detector_output = model(normalized)
-        t_spent_seconds = t_spent["seconds"]
 
         boxes = detector_output["detection_boxes"][0].numpy()
         classes = detector_output["detection_classes"][0].numpy()
         scores = detector_output["detection_scores"][0].numpy()
-
         detection_result = DetectionResult(
             model_version=model_version,
-            image_fname=image_fname,
+            image_fname=image_path.name,
             image_array=orig_image,
-            t_spent=t_spent_seconds,
             boxes=boxes,
-            scores=scores,
             classes=classes,
-            score_threshold=0.2)
+            scores=scores,
+            score_threshold=0.2,
+            t_spent=t_spent["seconds"])
         detection_result.annotate_birds_and_other_animate_creatures()
 
-        results.append(detection_result)
+        model_results.append(detection_result)
 
-    model_output_dir = Path(f"test-detection/model-outputs/efficientdet-{model_version}")
+    model_output_dir = Path(f"test-detection/model-outputs/{experiment_id}/efficientdet-{model_version}")
     if not model_output_dir.exists():
         model_output_dir.mkdir(parents=True)
 
     logger.info(f"{model_version}: Saving labeled images to the file system")
-    for r in results:
+    for r in model_results:
         r.save(base_dir=str(model_output_dir))
 
-    summary_stats = ModelPerformanceSummaryStats.summarize_detection_results(
+    model_summary_stats = ModelPerformanceSummaryStats.summarize_detection_results(
         model_version=model_version,
-        results=results)
+        results=model_results)
+    all_summary_stats.append(model_summary_stats)
 
-    print(summary_stats)
+    print(model_summary_stats)
     print("\n")
+
+ModelPerformanceSummaryStats.display_stats_table(all_summary_stats)
