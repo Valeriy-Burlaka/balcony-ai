@@ -7,7 +7,6 @@ from typing import List
 
 import cv2
 from PIL import Image, ImageDraw
-from transformers import pipeline
 
 from birds.lib.logger import get_logger, update_app_verbosity_level
 
@@ -70,7 +69,11 @@ def extract_clip(input_video_file, output_video_file, start_time, end_time):
 
     return 0
 
-def split_video_clip_to_frames(video_file, output_dir):
+def split_video_clip_to_frames(video_file: str, output_dir: str, image_format: str):
+    if image_format.lower() not in ["jpg", "png"]:
+        logger.error(f"Not supported image format: '{image_format}'")
+        return 1
+
     video_file = Path(video_file).resolve()
     if not video_file.exists():
         logger.error(f"File '{video_file.name}' does not exist at '{video_file.parent}'")
@@ -83,7 +86,7 @@ def split_video_clip_to_frames(video_file, output_dir):
         output_dir.mkdir(parents=True)
     logger.info(f"Saving frames to '{output_dir}'")
 
-    cap = cv2.VideoCapture(str(video_file))
+    cap = cv2.VideoCapture(video_file.as_posix())
     count = 0
 
     while cap.isOpened():
@@ -91,7 +94,7 @@ def split_video_clip_to_frames(video_file, output_dir):
         if not ret:
             break
 
-        output_file = output_dir / f"frame{count:05d}.png"
+        output_file = output_dir / f"{video_file.with_suffix("").name}__frame{count:05d}.{image_format}"
         cv2.imwrite(str(output_file), frame)
         count += 1
 
@@ -101,6 +104,8 @@ def split_video_clip_to_frames(video_file, output_dir):
     return 0
 
 def detect_objects(input_image_file: str, output_image_file: str, candidate_labels: List[str]):
+    from transformers import pipeline
+
     input_image_file = Path(input_image_file).resolve()
     if not input_image_file.exists():
         logger.error(f"File '{input_image_file.name}' does not exist at '{input_image_file.parent}'")
@@ -153,6 +158,7 @@ def create_cli():
                                                   help="Extract individual frames from a video file as images")
     extract_frames_parser.add_argument("-i", "--input", required=True, help="Path to the input video file")
     extract_frames_parser.add_argument("-o", "--output-dir", required=True, help="Directory to save extracted frames")
+    extract_frames_parser.add_argument("-f", "--format", choices=["jpg", "png"], default="jpg", help="Output image file format")
 
     object_detection_parser = subparsers.add_parser("detect-objects",
                                                     description="Detect specified objects in an image",
