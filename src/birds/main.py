@@ -18,8 +18,10 @@ logger = get_logger("main", verbosity=0)
 
 def extract_clip(input_video_file, output_video_file, start_time, end_time):
     input_video_file = Path(input_video_file).resolve()
+    output_video_file = Path(output_video_file).resolve().with_suffix(".mp4")
     logger.info(f"Extracting a clip from '{input_video_file}' to '{output_video_file}' ({start_time}-{end_time}s)")
-    if not input_video_file.exists():
+
+    if not input_video_file.exists() or not input_video_file.is_file():
         logger.error(f"File '{input_video_file.name}' does not exist at '{input_video_file.parent}'")
         return 1
 
@@ -29,7 +31,7 @@ def extract_clip(input_video_file, output_video_file, start_time, end_time):
 
     # 'cap' is short for "capture" and refers to the video capture object created by cv2.VideoCapture.
     # This object allows us to interact with the video file (e.g., reading frames, getting video properties).
-    cap = cv2.VideoCapture(str(input_video_file))
+    cap = cv2.VideoCapture(input_video_file.as_posix())
 
     # Retrieve the number of frames per second (fps) from the video, useful for timing calculations.
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -45,7 +47,7 @@ def extract_clip(input_video_file, output_video_file, start_time, end_time):
     # It is a code that helps specify the video codec used in the functions of VideoWriter or VideoCapture.
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     # Create a VideoWriter object to write the video to a file. We specify the codec, fps, and resolution.
-    out = cv2.VideoWriter(output_video_file, fourcc, fps, (int(cap.get(3)), int(cap.get(4))))
+    out = cv2.VideoWriter(output_video_file.as_posix(), fourcc, fps, (int(cap.get(3)), int(cap.get(4))))
 
     # Calculate the end position in milliseconds for the extraction.
     end_msec = end_time * 1000
