@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
 import argparse
-from pathlib import Path
 import sys
-from typing import List
+import time
+
+from pathlib import Path
 
 import cv2
+
 from PIL import Image, ImageDraw
 
-from birds.lib.logger import get_logger, update_app_verbosity_level
+from birds.lib.logger import get_logger, update_app_verbosity_level, update_logger_verbosity_level
 
 
 logger = get_logger("main", verbosity=0)
@@ -171,10 +173,13 @@ def create_cli():
 
     return parser
 
-def main():
+def main() -> int:
     cli = create_cli()
     args = cli.parse_args()
-    update_app_verbosity_level(args.verbosity or 0)
+    app_verbosity = args.verbosity or 0
+
+    update_app_verbosity_level(app_verbosity)
+    update_logger_verbosity_level(logger, app_verbosity)
 
     logger.debug(f"CLI call args: {args}")
     logger.debug(f"Work dir: {Path.cwd()}")
@@ -191,7 +196,8 @@ def main():
         candidate_labels = [obj.strip() for obj in args.candidates.split(',')]
         status = detect_objects(args.input, args.output, candidate_labels)
 
-    sys.exit(status)
+    return status
 
 if __name__ == "__main__":
-    main()
+    status_code = main()
+    sys.exit(status_code)

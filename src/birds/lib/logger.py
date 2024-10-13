@@ -45,3 +45,9 @@ def get_logger(name: str, verbosity: int):
 def update_app_verbosity_level(verbosity: int):
     level = map_verbosity_level_to_logging_level(verbosity)
     logging.basicConfig(level=level)
+
+def update_logger_verbosity_level(logger: logging.Logger, verbosity: int):
+    level = map_verbosity_level_to_logging_level(verbosity)
+    logger.setLevel(level)
+    for h in logger.handlers:
+        h.setLevel(level)
