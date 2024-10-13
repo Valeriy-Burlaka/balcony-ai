@@ -107,7 +107,10 @@ def split_video_clip_to_frames(video_file: str, output_dir: str, image_format: s
 
     return 0
 
-def detect_objects(input_image_file: str, output_image_file: str, candidate_labels: List[str]):
+def extract_clip_and_frames(input_video_file: str, start_time: int, end_time: int, output_dir: str, output_image_format: str):
+    logger.info(f"Extracting video clip and frames from '{start_time}' s. to '{end_time}' s.")
+
+def detect_objects(input_image_file: str, output_image_file: str, candidate_labels: list[str]):
     from transformers import pipeline
 
     input_image_file = Path(input_image_file).resolve()
@@ -143,30 +146,84 @@ def detect_objects(input_image_file: str, output_image_file: str, candidate_labe
 
     return 0
 
+class InvalidTimeFormatError(argparse.ArgumentTypeError):
+    def __init__(self, time_string: str):
+        self.message = (
+            f"Invalid time format: '{time_string}'. Please use 'MM:SS' "
+            "or 'HH:MM:SS' format (HH:[00-23], MM:[00-59], SS: [00:59])")
+        super.__init__(self.message)
+
+    def __str__(self):
+        return self.message
+
+def timestring_to_total_seconds(time_string: str) -> int:
+    num_time_parts = len(time_string.split(":"))
+    if num_time_parts < 2:
+        raise InvalidTimeFormatError(time_string)
+
+    format_string = "%M:%S" if num_time_parts == 2 else "%H:%M:%S"
+    try:
+        t = time.strptime(time_string, format_string)
+
+        return t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec
+    except ValueError:
+        raise InvalidTimeFormatError(time_string)
+
+def attach_extract_clip_parser(subparsers: argparse._SubParsersAction):
+    # TODO: Add explanation why I'm doing both 'help' and 'description' (vaguely remember there was some issue with displaying help messages)
+    parser = subparsers.add_parser("extract-clip",
+                                    description="Extract a specific time segment from a video file",
+                                    help="Extract a specific time segment from a video file")
+
+    parser.add_argument("-i", "--input", required=True, help="Path to the input video file")
+    parser.add_argument("-o", "--output", required=True, help="Path to save the output video file")
+    parser.add_argument("--start", type=int, default=0, help="Start time of the clip in seconds (default: %(default)d)")
+    parser.add_argument("--end", type=int, required=True, help="End time of the clip in seconds")
+
+    return parser
+
+def attach_extract_frames_parser(subparsers: argparse._SubParsersAction):
+    parser = subparsers.add_parser("extract-frames",
+                                    description="Extract individual frames from a video file as images",
+                                    help="Extract individual frames from a video file as images")
+
+    parser.add_argument("-i", "--input", required=True, help="Path to the input video file")
+    parser.add_argument("-o", "--output-dir", required=True, help="Directory to save extracted frames")
+    parser.add_argument("-f", "--format", choices=["jpg", "png"], default="jpg", help="Output image file format")
+
+def attach_extract_all_parser(subparsers: argparse._SubParsersAction):
+    help_string = "Extract a specific time segment from a video file as a clip and images"
+    parser = subparsers.add_parser("extract-all", description=help_string, help=help_string)
+
+    parser.add_argument("-i", "--input", required=True, help="Path to the input video file")
+    parser.add_argument("-o", "--output", required=True,
+                        help=("Output dir to save the resulting video clip and image "
+                              "frames. Will be created if not exists"))
+    parser.add_argument("--start", required=True,
+                        type=timestring_to_total_seconds,
+                        help="Start time of the clip (format: MM:SS or HH:MM:SS)")
+    parser.add_argument("--end", required=True,
+                        type=timestring_to_total_seconds,
+                        help="End time of the clip (format: MM:SS or HH:MM:SS)")
+    parser.add_argument("-f", "--format", choices=["jpg", "png"], default="jpg",
+                        help="Output image file format")
+
+
 def create_cli():
     parser = argparse.ArgumentParser(description="Video processing and object detection tool")
     parser.add_argument("-v", action="count", dest="verbosity", help="Increase output verbosity (use -v, -vv, or -vvv for more detailed output)")
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    extract_clip_parser = subparsers.add_parser("extract-clip",
-                                                description="Extract a specific time segment from a video file",
-                                                help="Extract a specific time segment from a video file")
-    extract_clip_parser.add_argument("-i", "--input", required=True, help="Path to the input video file")
-    extract_clip_parser.add_argument("-o", "--output", required=True, help="Path to save the output video file")
-    extract_clip_parser.add_argument("--start", type=int, default=0, help="Start time of the clip in seconds (default: %(default)d)")
-    extract_clip_parser.add_argument("--end", type=int, required=True, help="End time of the clip in seconds")
+    attach_extract_clip_parser(subparsers)
 
-    extract_frames_parser = subparsers.add_parser("extract-frames",
-                                                  description="Extract individual frames from a video file as images",
-                                                  help="Extract individual frames from a video file as images")
-    extract_frames_parser.add_argument("-i", "--input", required=True, help="Path to the input video file")
-    extract_frames_parser.add_argument("-o", "--output-dir", required=True, help="Directory to save extracted frames")
-    extract_frames_parser.add_argument("-f", "--format", choices=["jpg", "png"], default="jpg", help="Output image file format")
+    attach_extract_frames_parser(subparsers)
+
+    attach_extract_all_parser(subparsers)
 
     object_detection_parser = subparsers.add_parser("detect-objects",
-                                                    description="Detect specified objects in an image",
-                                                    help="Detect specified objects in an image")
+                                                    description="Detect specified objects in an image using pipeline",
+                                                    help="Detect specified objects in an image using pipeline")
     object_detection_parser.add_argument("-i", "--input", required=True, help="Path to the input image file")
     object_detection_parser.add_argument("-o", "--output", required=True, help="Path to save the output image file with detections")
     object_detection_parser.add_argument("--candidates",
@@ -187,6 +244,7 @@ def main() -> int:
     logger.debug(f"Work dir: {Path.cwd()}")
 
     status = 0
+
     if args.command == "extract-clip":
         status = extract_clip(args.input, args.output, args.start, args.end)
     elif args.command == "extract-frames":
@@ -194,6 +252,17 @@ def main() -> int:
             video_file=args.input,
             output_dir=args.output_dir,
             image_format=args.format)
+    elif args.command == "extract-all":
+        if args.start > args.end:
+            logger.error(f"Start time ({args.start}) must be less than end time ({args.end})")
+            return 1
+
+        extract_clip_and_frames(
+            input_video_file="",
+            start_time=args.start,
+            end_time=args.end,
+            output_dir="",
+            output_image_format="")
     elif args.command == "detect-objects":
         candidate_labels = [obj.strip() for obj in args.candidates.split(',')]
         status = detect_objects(args.input, args.output, candidate_labels)
