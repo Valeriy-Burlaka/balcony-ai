@@ -114,7 +114,7 @@ def extract_clip_and_frames(input_video_file, start_time, end_time, output_dir, 
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
     input_path = Path(input_video_file)
-    output_filename = f"_{input_path.stem}__clip_{end_time - start_time}-sec{input_path.suffix}"
+    output_filename = f"{input_path.stem}__clip_{end_time - start_time}-sec{input_path.suffix}"
     output_video_file = output_dir / output_filename
     status = extract_clip(
         input_video_file=input_video_file,
@@ -128,6 +128,11 @@ def extract_clip_and_frames(input_video_file, start_time, end_time, output_dir, 
             output_dir=output_dir,
             image_format=output_image_format,
         )
+
+    # Rename the clip so it appears at the top of the output dir, and my laptop
+    # doesn't burn from scrolling down 1000s of item in file explorer. The line
+    # below simply adds an underscore "_" to the file name.
+    output_video_file.rename(output_video_file.with_stem(f"_{output_video_file.stem}"))
 
     return status
 
