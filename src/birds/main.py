@@ -73,7 +73,7 @@ def extract_clip(input_video_file, output_video_file, start_time, end_time):
 
     return 0
 
-def split_video_clip_to_frames(video_file: str, output_dir: str, image_format: str):
+def split_video_clip_to_frames(video_file, output_dir, image_format):
     if image_format.lower() not in ["jpg", "png"]:
         logger.error(f"Not supported image format: '{image_format}'")
         return 1
@@ -107,8 +107,29 @@ def split_video_clip_to_frames(video_file: str, output_dir: str, image_format: s
 
     return 0
 
-def extract_clip_and_frames(input_video_file: str, start_time: int, end_time: int, output_dir: str, output_image_format: str):
+def extract_clip_and_frames(input_video_file, start_time, end_time, output_dir, output_image_format):
     logger.info(f"Extracting video clip and frames from '{start_time}' s. to '{end_time}' s.")
+
+    output_dir = Path(output_dir)
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
+    input_path = Path(input_video_file)
+    output_filename = f"_{input_path.stem}__clip_{end_time - start_time}-sec{input_path.suffix}"
+    output_video_file = output_dir / output_filename
+    status = extract_clip(
+        input_video_file=input_video_file,
+        output_video_file=output_video_file,
+        start_time=start_time,
+        end_time=end_time,
+    )
+    if status == 0:
+        status = split_video_clip_to_frames(
+            video_file=output_video_file,
+            output_dir=output_dir,
+            image_format=output_image_format,
+        )
+
+    return status
 
 def detect_objects(input_image_file: str, output_image_file: str, candidate_labels: list[str]):
     from transformers import pipeline
@@ -235,6 +256,7 @@ def create_cli():
 def main() -> int:
     cli = create_cli()
     args = cli.parse_args()
+
     app_verbosity = args.verbosity or 0
 
     update_app_verbosity_level(app_verbosity)
@@ -257,12 +279,13 @@ def main() -> int:
             logger.error(f"Start time ({args.start}) must be less than end time ({args.end})")
             return 1
 
-        extract_clip_and_frames(
-            input_video_file="",
+        status = extract_clip_and_frames(
+            input_video_file=args.input,
             start_time=args.start,
             end_time=args.end,
-            output_dir="",
-            output_image_format="")
+            output_dir=args.output,
+            output_image_format=args.format,
+        )
     elif args.command == "detect-objects":
         candidate_labels = [obj.strip() for obj in args.candidates.split(',')]
         status = detect_objects(args.input, args.output, candidate_labels)
