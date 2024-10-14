@@ -50,7 +50,7 @@ class ResultCategory(Enum):
     OTHER_ANIMALS = auto()
 
 @dataclass
-class DetectionResult:
+class SingleDetectionResult:
     model_version: str
     image_fname: str
     image_array: np.ndarray
@@ -153,7 +153,7 @@ class DetectionResult:
         #     logger.warning("Image is not annotated yet. Saving original image.")
 
         for category in self.result_categories:
-            category_dir = DetectionResult.result_category_to_dir_mapping()[category]
+            category_dir = SingleDetectionResult.result_category_to_dir_mapping()[category]
             p = Path(base_dir) / category_dir
             if not p.exists():
                 p.mkdir()
@@ -163,7 +163,7 @@ class DetectionResult:
             cv2.imwrite(f"{str(p)}", self.image_array)
 
 @dataclass
-class ModelPerformanceSummaryStats:
+class ExperimentSummaryStats:
     model_version: str
     # Mean detection rate. Helpful for testing the uniform datasets where all frames in the datasets
     # are in the same category (i.e., either "bird" or "no bird").
@@ -184,7 +184,7 @@ class ModelPerformanceSummaryStats:
     processing_time_mean: float
 
     @classmethod
-    def summarize_detection_results(cls, model_version: str, results: list[DetectionResult]) -> "ModelPerformanceSummaryStats":
+    def summarize_detection_results(cls, model_version: str, results: list[SingleDetectionResult]) -> "ExperimentSummaryStats":
         return cls(
             model_version=model_version,
             bird_detection_rate=statistics.mean([int(bool(r.num_birds_detected)) for r in results]),
@@ -195,8 +195,8 @@ class ModelPerformanceSummaryStats:
             processing_time_mean=statistics.mean([r.t_spent for r in results])
         )
 
-    @classmethod
-    def display_stats_table(stats_list: list["ModelPerformanceSummaryStats"]):
+    @staticmethod
+    def display_stats_table(stats_list: list["ExperimentSummaryStats"]):
         table = Table(title="Model Performance Summary Stats")
 
         # Add columns
@@ -268,7 +268,7 @@ def get_annotated_img_objects(img, boxes, scores, classes, score_threshold=0.25,
 
     return img, num_objects
 
-def annotate_birds_and_other_animate_creatures(img, boxes, scores, classes, score_threshold=0.2) -> DetectionResult:
+def annotate_birds_and_other_animate_creatures(img, boxes, scores, classes, score_threshold=0.2) -> SingleDetectionResult:
     birds, other_creatures = 0, 0
     bird_confidence_scores = []
 
@@ -301,77 +301,82 @@ def annotate_birds_and_other_animate_creatures(img, boxes, scores, classes, scor
         else:
             continue
 
-    return DetectionResult(
+    return SingleDetectionResult(
         image_array=img,
         num_birds_detected=birds,
         num_other_creatures_detected=other_creatures,
         bird_confidence_scores=bird_confidence_scores)
 
-input_dir = Path(sys.argv[1])
-if not input_dir.exists():
-    raise RuntimeError(f"No such dir exists: '{input_dir}'")
+def main(input_dir: Path):
+    input_images = list(input_dir.glob("*.jpg")) + list(input_dir.glob("*.png"))
+    logger.info(f"Testing {len(input_images)} images")
 
-input_images = [img for img in input_dir.glob("*")]
-logger.info(f"Testing {len(input_images)} images")
+    experiment_id = f"{input_dir.name}_experiment-{dt.now().strftime("%Y-%m-%dT%H-%M")}"
 
-experiment_id = dt.now().strftime("%Y-%m-%dT%H-%M")
+    all_summary_stats = []
 
-all_summary_stats = []
+    # "d4" is buggy (zero detection rate)
+    # for model_version in ["d4"]:
 
-# "d4" is buggy (zero detection rate)
-# for model_version in ["d4"]:
+    # for model_version in ["d1", "d2"]:
+    for model_version in ["d5", "d6", "d7"]:
+        model = load_model(family="efficientdet", version=model_version)
+        logger.info(f"Now testing images with 'efficientdet/{model_version}'")
 
-# for model_version in ["d1", "d2"]:
-for model_version in ["d5", "d6", "d7"]:
-    model = load_model(family="efficientdet", version=model_version)
-    logger.info(f"Now testing images with 'efficientdet/{model_version}'")
+        model_results = []
 
-    model_results = []
+        for job_index, image_path in enumerate(input_images):
+            if job_index % (len(input_images) // 10) == 0:
+                print(f"Now processing image '{image_path}'")
 
-    for job_index, image_path in enumerate(input_images):
-        if job_index % (len(input_images) // 10) == 0:
-            print(f"Now processing image '{image_path}'")
+            orig_image = read_image(image_path.resolve().as_posix())
+            preprocessed = preprocess_image(orig_image, target_size=IMG_SIZE_FOR_DETECTOR)
 
-        orig_image = read_image(image_path.resolve().as_posix())
-        preprocessed = preprocess_image(orig_image, target_size=IMG_SIZE_FOR_DETECTOR)
+            # cv2.imwrite(f"{output_dir}/preprocessed-{image_name}", preprocessed)
 
-        # cv2.imwrite(f"{output_dir}/preprocessed-{image_name}", preprocessed)
+            normalized = normalize_for_tf(image=preprocessed)
 
-        normalized = normalize_for_tf(image=preprocessed)
+            with timeit("Object detection") as t_spent:
+                detector_output = model(normalized)
 
-        with timeit("Object detection") as t_spent:
-            detector_output = model(normalized)
+            boxes = detector_output["detection_boxes"][0].numpy()
+            classes = detector_output["detection_classes"][0].numpy()
+            scores = detector_output["detection_scores"][0].numpy()
+            detection_result = SingleDetectionResult(
+                model_version=model_version,
+                image_fname=image_path.name,
+                image_array=orig_image,
+                boxes=boxes,
+                classes=classes,
+                scores=scores,
+                score_threshold=0.2,
+                t_spent=t_spent["seconds"])
+            detection_result.annotate_birds_and_other_animate_creatures()
 
-        boxes = detector_output["detection_boxes"][0].numpy()
-        classes = detector_output["detection_classes"][0].numpy()
-        scores = detector_output["detection_scores"][0].numpy()
-        detection_result = DetectionResult(
+            model_results.append(detection_result)
+
+        model_output_dir = Path(f"test-detection/model-outputs/{experiment_id}/efficientdet-{model_version}")
+        if not model_output_dir.exists():
+            model_output_dir.mkdir(parents=True)
+
+        logger.info(f"{model_version}: Saving labeled images to the file system")
+        for r in model_results:
+            r.save(base_dir=str(model_output_dir))
+
+        model_summary_stats = ExperimentSummaryStats.summarize_detection_results(
             model_version=model_version,
-            image_fname=image_path.name,
-            image_array=orig_image,
-            boxes=boxes,
-            classes=classes,
-            scores=scores,
-            score_threshold=0.2,
-            t_spent=t_spent["seconds"])
-        detection_result.annotate_birds_and_other_animate_creatures()
+            results=model_results)
+        all_summary_stats.append(model_summary_stats)
 
-        model_results.append(detection_result)
+        print(model_summary_stats)
+        print("\n")
 
-    model_output_dir = Path(f"test-detection/model-outputs/{experiment_id}/efficientdet-{model_version}")
-    if not model_output_dir.exists():
-        model_output_dir.mkdir(parents=True)
+    ExperimentSummaryStats.display_stats_table(all_summary_stats)
 
-    logger.info(f"{model_version}: Saving labeled images to the file system")
-    for r in model_results:
-        r.save(base_dir=str(model_output_dir))
 
-    model_summary_stats = ModelPerformanceSummaryStats.summarize_detection_results(
-        model_version=model_version,
-        results=model_results)
-    all_summary_stats.append(model_summary_stats)
+if __name__ == "__main__":
+    input_dir = Path(sys.argv[1])
+    if not input_dir.exists() or not input_dir.is_dir():
+        raise RuntimeError(f"No such dir exists: '{input_dir}'")
 
-    print(model_summary_stats)
-    print("\n")
-
-ModelPerformanceSummaryStats.display_stats_table(all_summary_stats)
+    main(input_dir)
