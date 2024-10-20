@@ -32,6 +32,11 @@ update_app_verbosity_level(verbosity=2)
 
 INPUT_IMG_WIDTH = 1920
 INPUT_IMG_HEIGHT = 1080
+# It *looks* like the effdet model is configured to work best with this image size
+# (see https://github.com/google/automl/blob/master/efficientdet/hparams_config.py#L181).
+# Some people on the Internet recommend to always use square images and to set both width
+# and height of the input image to the multiples of 16, which sounds reasonable, and which
+# I was already doing anyway.
 IMG_SIZE_FOR_DETECTOR = 640
 
 
