@@ -231,17 +231,17 @@ class ExperimentSummaryStats:
         console.print(table)
 
 def denormalize_box_coordinates(box: Box) -> Box:
-    # scale_back_coeff = INPUT_IMG_WIDTH / IMG_SIZE_FOR_DETECTOR
-    # Transform tensor coordinates (0...1) back to the coordinates on a 1920x1920 square image.
-    scale_back_coeff = INPUT_IMG_WIDTH
+    """
+    Transform tensor coordinates (0...1) back to the coordinates on a 1920x1920 square image.
+    """
     # Translate the Y coordinate values on the 1920x1920 square image to the values on the original
     # 1080x1920 image by subtracting the height of a single vertical bar, which we've added to
     # letterbox the original landscape image into a square.
     de_letterbox_value = (INPUT_IMG_WIDTH - INPUT_IMG_HEIGHT) // 2
 
-    x_min, x_max = int(box.x_min * scale_back_coeff), int(box.x_max * scale_back_coeff)
-    y_min, y_max = int(box.y_min * scale_back_coeff - de_letterbox_value), \
-                    int(box.y_max * scale_back_coeff - de_letterbox_value)
+    x_min, x_max = int(box.x_min * INPUT_IMG_WIDTH), int(box.x_max * INPUT_IMG_WIDTH)
+    y_min, y_max = int(box.y_min * INPUT_IMG_WIDTH - de_letterbox_value), \
+                    int(box.y_max * INPUT_IMG_WIDTH - de_letterbox_value)
 
     return Box(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
 
