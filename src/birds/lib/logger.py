@@ -15,7 +15,7 @@ def map_verbosity_level_to_logging_level(verbosity: int) -> int:
 
     return level_map.get(verbosity, logging.DEBUG)
 
-def get_logger(name: str, verbosity: int):
+def get_logger(name: str, verbosity: int, log_dir="tmp/logs"):
     if name in loggers:
         return loggers[name]
 
@@ -33,7 +33,7 @@ def get_logger(name: str, verbosity: int):
     ch.setLevel(level)
     logger.addHandler(ch)
 
-    fh = RotatingFileHandler(f"{name}.log", maxBytes=10*1024*1024, backupCount=5)
+    fh = RotatingFileHandler(f"./{log_dir}/{name}.log", maxBytes=10*1024*1024, backupCount=5)
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(formatter)
     logger.addHandler(fh)
