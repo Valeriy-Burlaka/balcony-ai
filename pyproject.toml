@@ -42,11 +42,14 @@ dependencies = [
   "pillow",
   "rich",
   "scipy",
+  "streamlit",
+  "streamlit-cropper",
   "timm",
   "torch",
   "torchvision",
   "torchaudio",
   "transformers",
+  "watchdog",
 ]
 
 [tool.hatch.envs.types]
