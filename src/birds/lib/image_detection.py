@@ -55,6 +55,8 @@ class SingleDetectionResult:
     bird_confidence_scores: list[float] = field(default_factory=list)
 
     def annotate_birds_and_other_animate_creatures(self) -> np.ndarray:
+        input_image_height = self.image_array.shape[0]
+        input_image_width = self.image_array.shape[1]
         for box, cls, score in zip(self.boxes, self.classes, self.scores):
             cls = int(cls)
             if cls in ALL_ANIMATE_CREATURES_CLASSES and score > self.score_threshold:
@@ -65,7 +67,11 @@ class SingleDetectionResult:
                     self.num_other_creatures_detected += 1
 
                 y_min, x_min, y_max, x_max = box
-                box = denormalize_box_coordinates(Box(x_min=x_min, y_min=y_min, x_max=x_max, y_max=y_max))
+                box = denormalize_box_coordinates(
+                    box=Box(x_min=x_min, y_min=y_min, x_max=x_max, y_max=y_max),
+                    input_img_width=input_image_width,
+                    input_img_height=input_image_height,
+                )
 
                 cv2.rectangle(self.image_array,
                             (box.x_min, box.y_min),
@@ -214,67 +220,71 @@ class ExperimentSummaryStats:
         console = Console()
         console.print(table)
 
-def denormalize_box_coordinates(box: Box) -> Box:
+def denormalize_box_coordinates(box: Box, input_img_width: int, input_img_height: int) -> Box:
     """
     Transform tensor coordinates (0...1) back to the coordinates on a 1920x1920 square image.
     """
     # Translate the Y coordinate values on the 1920x1920 square image to the values on the original
     # 1080x1920 image by subtracting the height of a single vertical bar, which we've added to
     # letterbox the original landscape image into a square.
-    de_letterbox_value = (INPUT_IMG_WIDTH - INPUT_IMG_HEIGHT) // 2
+    de_letterbox_value = (input_img_width - input_img_height) // 2
 
-    x_min, x_max = int(box.x_min * INPUT_IMG_WIDTH), int(box.x_max * INPUT_IMG_WIDTH)
-    y_min, y_max = int(box.y_min * INPUT_IMG_WIDTH - de_letterbox_value), \
-                    int(box.y_max * INPUT_IMG_WIDTH - de_letterbox_value)
+    x_min, x_max = int(box.x_min * input_img_width), int(box.x_max * input_img_width)
+    y_min, y_max = int(box.y_min * input_img_width - de_letterbox_value), \
+                    int(box.y_max * input_img_width - de_letterbox_value)
 
     return Box(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
 
-def get_annotated_img_objects(img, boxes, scores, classes, score_threshold=0.25, label_map=None):
-    num_objects = 0
+# def get_annotated_img_objects(img, boxes, scores, classes, score_threshold=0.25, label_map=None):
+#     num_objects = 0
 
-    for box, cls, score in zip(boxes, classes, scores):
-        if score >= score_threshold:
-            y_min, x_min, y_max, x_max = box
-            box = denormalize_box_coordinates(Box(x_min=x_min, y_min=y_min, x_max=x_max, y_max=y_max))
+#     for box, cls, score in zip(boxes, classes, scores):
+#         if score >= score_threshold:
+#             y_min, x_min, y_max, x_max = box
+#             box = denormalize_box_coordinates(Box(x_min=x_min, y_min=y_min, x_max=x_max, y_max=y_max))
 
-            cv2.rectangle(
-                img,
-                (box.x_min, box.y_min),
-                (box.x_max, box.y_max),
-                color=BGR_COLOR_RED,
-                thickness=1,
-            )
+#             cv2.rectangle(
+#                 img,
+#                 (box.x_min, box.y_min),
+#                 (box.x_max, box.y_max),
+#                 color=BGR_COLOR_RED,
+#                 thickness=1,
+#             )
 
-            if label_map:
-                label = label_map[int(cls)]
-                cv2.putText(
-                    img,
-                    f"{label}: {score:.2f}",
-                    (box.x_min, box.y_min - 10),
-                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=0.9,
-                    color=BGR_COLOR_LIME,
-                    thickness=2,
-                )
+#             if label_map:
+#                 label = label_map[int(cls)]
+#                 cv2.putText(
+#                     img,
+#                     f"{label}: {score:.2f}",
+#                     (box.x_min, box.y_min - 10),
+#                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+#                     fontScale=0.9,
+#                     color=BGR_COLOR_LIME,
+#                     thickness=2,
+#                 )
 
-            num_objects += 1
+#             num_objects += 1
 
-    return img, num_objects
+#     return img, num_objects
 
-def annotate_birds_and_other_animate_creatures(
+def annotate_image_with_selected_classes(
     image: np.ndarray,
     boxes: np.ndarray,
     scores: np.ndarray,
     classes: np.ndarray,
-    target_classes=ALL_ANIMATE_CREATURES_CLASSES[:],
+    selected_classes=ALL_ANIMATE_CREATURES_CLASSES[:],
     score_threshold=0.2,
 ) -> np.ndarray:
     birds, other_creatures = 0, 0
     bird_confidence_scores = []
 
+    input_image_height = image.shape[0]
+    input_image_width = image.shape[1]
+    print(f"Input image height: {input_image_height}; Width: {input_image_width}")
+
     for box, cls, score in zip(boxes, classes, scores):
         cls = int(cls)
-        if cls in target_classes and score > score_threshold:
+        if cls in selected_classes and score > score_threshold:
             if cls == BIRD_CLASS:
                 birds += 1
                 bird_confidence_scores.append(score)
@@ -282,7 +292,11 @@ def annotate_birds_and_other_animate_creatures(
                 other_creatures += 1
 
             y_min, x_min, y_max, x_max = box
-            box = denormalize_box_coordinates(Box(x_min=x_min, y_min=y_min, x_max=x_max, y_max=y_max))
+            box = denormalize_box_coordinates(
+                box=Box(x_min=x_min, y_min=y_min, x_max=x_max, y_max=y_max),
+                input_img_width=input_image_width,
+                input_img_height=input_image_height,
+            )
 
             cv2.rectangle(
                 image,
