@@ -98,7 +98,7 @@ def split_video_clip_to_frames(video_file, output_dir, image_format):
         if not ret:
             break
 
-        output_file = output_dir / f"{video_file.with_suffix("").name}__frame{count:05d}.{image_format}"
+        output_file = output_dir / f"{video_file.with_suffix('').name}__frame{count:05d}.{image_format}"
         cv2.imwrite(str(output_file), frame)
         count += 1
 
