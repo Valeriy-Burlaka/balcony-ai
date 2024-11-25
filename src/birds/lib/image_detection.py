@@ -11,6 +11,13 @@ import numpy as np
 from rich.console import Console
 from rich.table import Table
 
+from birds.lib.image_preprocessing import (
+    normalize_for_tf,
+    preprocess_image,
+    read_image,
+)
+from birds.lib.utils import timeit
+
 from birds.lib.coco_labels import COCO_LABELS, BIRD_CLASS, ALL_ANIMATE_CREATURES_CLASSES
 from birds.lib.colors import BGR_COLOR_LIME, BGR_COLOR_RED
 
@@ -40,7 +47,6 @@ class ResultCategory(Enum):
 
 @dataclass
 class SingleDetectionResult:
-    model_version: str
     image_fname: str
     image_array: np.ndarray
     t_spent: float
@@ -107,6 +113,13 @@ class SingleDetectionResult:
         return min(self.bird_confidence_scores) if self.bird_confidence_scores else .0
 
     @property
+    def annotated_image(self) -> np.ndarray:
+        if not self.annotated:
+            raise RuntimeWarning("Image is not annotated. Call .annotate_birds_and_other_animate_creatures() instance method first")
+
+        return self.image_array
+
+    @property
     def result_categories(self) -> list[ResultCategory]:
         if not self.annotated:
             raise RuntimeWarning("Image is not annotated. Call .annotate_birds_and_other_animate_creatures() instance method first")
@@ -143,10 +156,8 @@ class SingleDetectionResult:
             ResultCategory.OTHER_ANIMALS: "others"
         }
 
-    def save(self, base_dir: str):
-        # if not self.annotated:
-        #     logger.warning("Image is not annotated yet. Saving original image.")
-
+    def save_categorized_results(self, base_dir: str):
+        img_data = self.annotated_image
         for category in self.result_categories:
             category_dir = SingleDetectionResult.result_category_to_dir_mapping()[category]
             p = Path(base_dir) / category_dir
@@ -155,7 +166,7 @@ class SingleDetectionResult:
 
             p = p / self.image_fname
 
-            cv2.imwrite(f"{str(p)}", self.image_array)
+            cv2.imwrite(f"{str(p)}", img_data)
 
 @dataclass
 class ExperimentSummaryStats:
@@ -320,3 +331,27 @@ def annotate_image_with_selected_classes(
             continue
 
     return image
+
+def detect(model, image: Path) -> SingleDetectionResult:
+    orig_image = read_image(image.as_posix())
+    preprocessed = preprocess_image(orig_image, target_size=IMG_SIZE_FOR_DETECTOR)
+    normalized = normalize_for_tf(image=preprocessed)
+
+    with timeit("Object detection") as t_spent:
+        detector_output = model(normalized)
+
+    boxes = detector_output["detection_boxes"][0].numpy()
+    classes = detector_output["detection_classes"][0].numpy()
+    scores = detector_output["detection_scores"][0].numpy()
+    detection_result = SingleDetectionResult(
+        image_fname=image.name,
+        image_array=orig_image,
+        boxes=boxes,
+        classes=classes,
+        scores=scores,
+        score_threshold=0.2,
+        t_spent=t_spent["seconds"])
+
+    detection_result.annotate_birds_and_other_animate_creatures()
+
+    return detection_result

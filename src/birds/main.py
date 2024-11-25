@@ -8,9 +8,11 @@ from pathlib import Path
 
 import cv2
 
-from PIL import Image, ImageDraw
+# from PIL import Image, ImageDraw
 
 from birds.lib.logger import get_logger, update_app_verbosity_level, update_logger_verbosity_level
+from birds.lib.tf_models import load_model
+from birds.lib.image_detection import detect
 
 
 logger = get_logger("main", verbosity=0)
@@ -136,39 +138,22 @@ def extract_clip_and_frames(input_video_file, start_time, end_time, output_dir, 
 
     return status
 
-def detect_objects(input_image_file: str, output_image_file: str, candidate_labels: list[str]):
-    from transformers import pipeline
-
-    input_image_file = Path(input_image_file).resolve()
-    if not input_image_file.exists():
-        logger.error(f"File '{input_image_file.name}' does not exist at '{input_image_file.parent}'")
+def detect_objects(input_image: str, output_image: str, model_family="efficientdet", model_version="d1"):
+    image_file = Path(input_image).resolve()
+    if not image_file.exists():
+        logger.error(f"File '{image_file.name}' does not exist at '{image_file.parent}'")
         return 1
 
-    checkpoint = "google/owlv2-base-patch16-ensemble"
-    logger.info(f"Detecting objects: '{candidate_labels}' using '{checkpoint}' model checkpoint...")
-    detector = pipeline(model=checkpoint, task="zero-shot-object-detection")
+    logger.info(f"Processing image '{image_file}' with '{model_family}/{model_version}'")
 
-    image = Image.open(str(input_image_file)).convert("RGB")
-    predictions = detector(
-        image,
-        candidate_labels=candidate_labels,
-    )
-    logger.info(f"Result: {predictions}")
+    model = load_model(family=model_family, version=model_version)
+    result = detect(model, image_file)
 
-    draw = ImageDraw.Draw(image)
-    for prediction in predictions:
-        box = prediction["box"]
-        label = prediction["label"]
-        score = prediction["score"]
+    output_path = Path(output_image).resolve()
+    if not output_path.parent.exists():
+        output_path.parent.mkdir(parents=True)
 
-        xmin, ymin, xmax, ymax = box.values()
-        draw.rectangle((xmin, ymin, xmax, ymax), outline="red", width=1)
-        draw.text((xmin, ymin), f"{label}: {round(score,2)}", fill="white")
-
-    output_image_file = Path(output_image_file).resolve()
-    if not output_image_file.parent.exists():
-        output_image_file.parent.mkdir(parents=True)
-    image.save(output_image_file)
+    cv2.imwrite(f"{output_path.as_posix()}", result.annotated_image)
 
     return 0
 
@@ -252,9 +237,11 @@ def create_cli():
                                                     help="Detect specified objects in an image using pipeline")
     object_detection_parser.add_argument("-i", "--input", required=True, help="Path to the input image file")
     object_detection_parser.add_argument("-o", "--output", required=True, help="Path to save the output image file with detections")
-    object_detection_parser.add_argument("--candidates",
-                                         default="bird,flower pot",
-                                         help="Comma-separated list of objects to detect (e.g., 'bird,car,person') Default: %(default)s")
+    # model version: d1, d2, d3, d4, d5, d6, d7 # d4 is buggy — zero detection rate. Add arg: --model-version
+    object_detection_parser.add_argument("--model-version",
+                                         choices=["d1", "d2", "d3", "d4", "d5", "d6", "d7"],
+                                         default="d1",
+                                         help="Model version to use for object detection")
 
     return parser
 
@@ -292,8 +279,11 @@ def main() -> int:
             output_image_format=args.format,
         )
     elif args.command == "detect-objects":
-        candidate_labels = [obj.strip() for obj in args.candidates.split(',')]
-        status = detect_objects(args.input, args.output, candidate_labels)
+        status = detect_objects(
+            input_image=args.input,
+            output_image=args.output,
+            model_version=args.model_version,
+        )
 
     return status
 

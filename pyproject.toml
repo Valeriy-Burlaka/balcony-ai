@@ -45,10 +45,6 @@ dependencies = [
   "streamlit",
   "streamlit-cropper",
   "timm",
-  "torch",
-  "torchvision",
-  "torchaudio",
-  "transformers",
   "watchdog",
 ]
 

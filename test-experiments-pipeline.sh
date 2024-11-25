@@ -1,3 +1,5 @@
-#!/usr/bin/env sh
+#!/usr/bin/env zsh
 
-time python src/birds/test_tf_model.py ./test-detection/datasets/functional-regression-test
+export PYTHONPATH="$(pwd)/src:$PYTHONPATH"
+
+python src/birds/test_tf_model.py ./test-detection/datasets/functional-regression-test

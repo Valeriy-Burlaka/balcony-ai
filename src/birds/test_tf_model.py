@@ -3,26 +3,18 @@ import sys
 from datetime import datetime as dt
 from pathlib import Path
 
-from birds.lib.image_detection import (
-    ExperimentSummaryStats,
-    SingleDetectionResult,
-    IMG_SIZE_FOR_DETECTOR,
-)
-from birds.lib.image_preprocessing import (
-    normalize_for_tf,
-    preprocess_image,
-    read_image,
-)
+from birds.lib.image_detection import (ExperimentSummaryStats, detect)
 from birds.lib.logger import get_logger, update_app_verbosity_level
 from birds.lib.tf_models import load_model
-from birds.lib.utils import timeit
 
 
 logger = get_logger("test_tf_pipeline", verbosity=2)
 update_app_verbosity_level(verbosity=2)
 
+
 def main(input_dir: Path):
     input_images = list(input_dir.glob("*.jpg")) + list(input_dir.glob("*.png"))
+    # TODO: sort `input_images`; keep append-only file for all processed imanges
     num_input_images = len(input_images)
     logger.info(f"Testing {num_input_images} images")
 
@@ -46,29 +38,9 @@ def main(input_dir: Path):
             if job_index % max(num_input_images // 10, 1) == 0:
                 logger.info(f"Now processing image '{image_path}'")
 
-            orig_image = read_image(image_path.resolve().as_posix())
-            preprocessed = preprocess_image(orig_image, target_size=IMG_SIZE_FOR_DETECTOR)
-
-            normalized = normalize_for_tf(image=preprocessed)
-
-            with timeit("Object detection") as t_spent:
-                detector_output = model(normalized)
-
-            boxes = detector_output["detection_boxes"][0].numpy()
-            classes = detector_output["detection_classes"][0].numpy()
-            scores = detector_output["detection_scores"][0].numpy()
-            detection_result = SingleDetectionResult(
-                model_version=model_version,
-                image_fname=image_path.name,
-                image_array=orig_image,
-                boxes=boxes,
-                classes=classes,
-                scores=scores,
-                score_threshold=0.2,
-                t_spent=t_spent["seconds"])
-            detection_result.annotate_birds_and_other_animate_creatures()
-
-            model_results.append(detection_result)
+            image_file = image_path.resolve()
+            result = detect(model, image_file)
+            model_results.append(result)
 
         model_output_dir = Path(f"test-detection/model-outputs/{experiment_id}/efficientdet-{model_version}")
         if not model_output_dir.exists():
@@ -76,7 +48,7 @@ def main(input_dir: Path):
 
         logger.info(f"{model_version}: Saving labeled images to the file system")
         for r in model_results:
-            r.save(base_dir=str(model_output_dir))
+            r.save_categorized_results(base_dir=str(model_output_dir))
 
         model_summary_stats = ExperimentSummaryStats.summarize_detection_results(
             model_version=model_version,
