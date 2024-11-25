@@ -13,4 +13,8 @@ pip install --upgrade pip
 pip install -r requirements.txt
 
 # Verify installation
-echo $(python3 -c "import tensorflow as tf; print(tf.reduce_sum(tf.random.normal([1000, 1000])))")
+python3 -c "import tensorflow as tf; print('Random tensor test result: ', tf.reduce_sum(tf.random.normal([1000, 1000])))"
+
+python3 -c "import tensorflow as tf; print('GPU: ', tf.config.list_physical_devices('GPU'))"
+
+python3 -c "import tensorflow as tf; print('CPU: ', tf.config.list_physical_devices('CPU'))"
