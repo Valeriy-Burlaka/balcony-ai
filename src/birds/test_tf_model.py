@@ -18,7 +18,7 @@ def main(input_dir: Path):
     num_input_images = len(input_images)
     logger.info(f"Testing {num_input_images} images")
 
-    experiment_id = f"{input_dir.name}_experiment-{dt.now().strftime("%Y-%m-%dT%H-%M")}"
+    experiment_id = f"{input_dir.name}_experiment-{dt.now().strftime('%Y-%m-%dT%H-%M')}"
 
     all_summary_stats = []
 
