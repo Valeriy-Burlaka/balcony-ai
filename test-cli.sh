@@ -2,6 +2,18 @@
 
 export PYTHONPATH="$(pwd)/src:$PYTHONPATH"
 
+interactive_mode=false  # Show results after running the script
+for arg in "$@"; do
+    case "$arg" in
+        --interactive)
+            interactive_mode=true
+            ;;
+        *)
+            echo "Unknown option: $arg"
+            ;;
+    esac
+done
+
 function clean_outputs() {
     rm test-cli/output.mp4
     rm -rf test-cli/4-sec-video-to-frames
@@ -16,4 +28,6 @@ clean_outputs
     -i test-cli/test-cli.jpg \
     -o test-cli/object-detection/prediction.jpg
 
-open test-cli/object-detection/prediction.jpg
+if [[ $interactive_mode = true && $(uname) = "Darwin" ]]; then
+    open test-cli/object-detection/prediction.jpg
+fi
