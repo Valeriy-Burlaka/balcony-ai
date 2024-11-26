@@ -8,11 +8,7 @@ from pathlib import Path
 
 import cv2
 
-# from PIL import Image, ImageDraw
-
 from birds.lib.logger import get_logger, update_app_verbosity_level, update_logger_verbosity_level
-from birds.lib.tf_models import load_model
-from birds.lib.image_detection import detect
 
 
 logger = get_logger("main", verbosity=0)
@@ -139,6 +135,9 @@ def extract_clip_and_frames(input_video_file, start_time, end_time, output_dir, 
     return status
 
 def detect_objects(input_image: str, output_image: str, model_family="efficientdet", model_version="d1"):
+    from birds.lib.tf_models import load_model
+    from birds.lib.image_detection import detect
+
     image_file = Path(input_image).resolve()
     if not image_file.exists():
         logger.error(f"File '{image_file.name}' does not exist at '{image_file.parent}'")
@@ -150,10 +149,7 @@ def detect_objects(input_image: str, output_image: str, model_family="efficientd
     result = detect(model, image_file)
 
     output_path = Path(output_image).resolve()
-    if not output_path.parent.exists():
-        output_path.parent.mkdir(parents=True)
-
-    cv2.imwrite(f"{output_path.as_posix()}", result.annotated_image)
+    result.save(output_path)
 
     return 0
 
@@ -237,8 +233,8 @@ def create_cli():
                                                     help="Detect specified objects in an image using pipeline")
     object_detection_parser.add_argument("-i", "--input", required=True, help="Path to the input image file")
     object_detection_parser.add_argument("-o", "--output", required=True, help="Path to save the output image file with detections")
-    # model version: d1, d2, d3, d4, d5, d6, d7 # d4 is buggy — zero detection rate. Add arg: --model-version
     object_detection_parser.add_argument("--model-version",
+                                         # d4 is buggy — low or zero detection rate.
                                          choices=["d1", "d2", "d3", "d4", "d5", "d6", "d7"],
                                          default="d1",
                                          help="Model version to use for object detection")

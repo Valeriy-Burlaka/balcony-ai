@@ -112,17 +112,19 @@ class SingleDetectionResult:
     def bird_confidence_min(self) -> float:
         return min(self.bird_confidence_scores) if self.bird_confidence_scores else .0
 
-    @property
-    def annotated_image(self) -> np.ndarray:
+    def _assert_annotated(self):
         if not self.annotated:
             raise RuntimeWarning("Image is not annotated. Call .annotate_birds_and_other_animate_creatures() instance method first")
+
+    @property
+    def annotated_image(self) -> np.ndarray:
+        self._assert_annotated()
 
         return self.image_array
 
     @property
     def result_categories(self) -> list[ResultCategory]:
-        if not self.annotated:
-            raise RuntimeWarning("Image is not annotated. Call .annotate_birds_and_other_animate_creatures() instance method first")
+        self._assert_annotated()
 
         categories = []
 
@@ -156,17 +158,20 @@ class SingleDetectionResult:
             ResultCategory.OTHER_ANIMALS: "others"
         }
 
+    def save(self, output_path: Path):
+        if not output_path.parent.exists():
+            output_path.parent.mkdir(parents=True)
+
+        cv2.imwrite(output_path.as_posix(), self.annotated_image)
+
     def save_categorized_results(self, base_dir: str):
-        img_data = self.annotated_image
+        self._assert_annotated()
+
         for category in self.result_categories:
             category_dir = SingleDetectionResult.result_category_to_dir_mapping()[category]
-            p = Path(base_dir) / category_dir
-            if not p.exists():
-                p.mkdir()
+            p = Path(base_dir) / category_dir / self.image_fname
 
-            p = p / self.image_fname
-
-            cv2.imwrite(f"{str(p)}", img_data)
+            self.save(p)
 
 @dataclass
 class ExperimentSummaryStats:
@@ -333,9 +338,14 @@ def annotate_image_with_selected_classes(
     return image
 
 def detect(model, image: Path) -> SingleDetectionResult:
-    orig_image = read_image(image.as_posix())
-    preprocessed = preprocess_image(orig_image, target_size=IMG_SIZE_FOR_DETECTOR)
-    normalized = normalize_for_tf(image=preprocessed)
+    with timeit("Reading image") as t_spent:
+        orig_image = read_image(image.as_posix())
+
+    with timeit("Preprocessing image") as t_spent:
+        preprocessed = preprocess_image(orig_image, target_size=IMG_SIZE_FOR_DETECTOR)
+
+    with timeit("Normalizing image") as t_spent:
+        normalized = normalize_for_tf(image=preprocessed)
 
     with timeit("Object detection") as t_spent:
         detector_output = model(normalized)
