@@ -68,7 +68,198 @@ ls /dev/apex*
 lspci -nn | grep 089a
 ```
 
-## TF Lite (todo)
+## TF Lite
+
+### TensorFlow Lite Runtime: Libs
+
+Tried to `pip install tflite-support` [library](https://pypi.org/project/tflite-support/) used in the official Tensorflow [tutorial](https://github.com/tensorflow/examples/blob/master/lite/examples/object_detection/raspberry_pi/requirements.txt) — failed, as the only available version was some 0.1.1 alpha:
+
+```sh
+% pip install tflite-support
+Looking in indexes: https://pypi.org/simple, https://www.piwheels.org/simple
+Collecting tflite-support
+  Downloading tflite-support-0.1.0a1.tar.gz (390 kB)
+  Preparing metadata (setup.py) ... done
+```
+
+(nothing worked there)
+
+A forced installation with specific version didn't work too:
+
+```sh
+% pip install "tflite-support>=0.4.2"
+Looking in indexes: https://pypi.org/simple, https://www.piwheels.org/simple
+ERROR: Could not find a version that satisfies the requirement tflite-support>=0.4.2 (from versions: 0.1.0a0.dev3, 0.1.0a0.dev4, 0.1.0a0.dev5, 0.1.0a0, 0.1.0a1)
+ERROR: No matching distribution found for tflite-support>=0.4.2
+```
+
+### tflite-runtime
+
+Claude said "a-ha! that's because ..." and pointed to another tflite [library](https://pypi.org/project/tflite-runtime/).
+I don't understand the difference between them - the description is almost identical to `tflite-support` and names itself `TensorFlow Lite`:
+
+```text
+TensorFlow Lite is the official solution for running machine learning models on mobile and embedded devices. It enables on-device machine learning inference with low latency and a small binary size on Android, iOS, and other operating systems.
+```
+
+Even worse, `tflite-support` and `tflite-runtime` had their last release 1+ year ago, and approximately at the same time (Jul'23 and Oct'23)
+
+### ai-edge-litert
+
+This is what [is recommended](https://ai.google.dev/edge/litert/inference#run-python) by Google as a replacement for `tflite`. Didn't install for me either:
+
+```sh
+% pip install ai-edge-litert
+Looking in indexes: https://pypi.org/simple, https://www.piwheels.org/simple
+ERROR: Could not find a version that satisfies the requirement ai-edge-litert (from versions: none)
+ERROR: No matching distribution found for ai-edge-litert
+```
+
+As with previous libs, this one is also perfectly [available](https://pypi.org/project/ai-edge-litert/) on PyPi so, at this point, I started to suspect that maybe they are not being built for RPi/ARM, despite being visually available at the package index.
+
+### Distributions
+
+Indeed, it looks that for Python 3.11/ARM combination, the `ai-edge-litert` lib is available only for Mac OS, plus in 2x `x86_64` distributions for Linux/Mac.
+The `tflite-support` lib is not available for Py 3.11/ARM at all, only for `x86_64`:
+
+```text
+Built Distributions
+ai_edge_litert-1.0.1-cp311-cp311-manylinux_2_17_x86_64.whl (2.2 MB view details)
+Uploaded Aug 30, 2024 CPython 3.11 manylinux: glibc 2.17+ x86-64
+
+ai_edge_litert-1.0.1-cp311-cp311-macosx_12_0_arm64.whl (2.3 MB view details)
+Uploaded Aug 30, 2024 CPython 3.11 macOS 12.0+ ARM64
+
+ai_edge_litert-1.0.1-cp311-cp311-macosx_10_15_x86_64.whl (2.8 MB view details)
+Uploaded Aug 30, 2024 CPython 3.11 macOS 10.15+ x86-64
+
+ai_edge_litert-1.0.1-cp310-cp310-manylinux_2_17_x86_64.whl (2.2 MB view details)
+Uploaded Aug 30, 2024 CPython 3.10 manylinux: glibc 2.17+ x86-64
+
+ai_edge_litert-1.0.1-cp310-cp310-macosx_12_0_arm64.whl (2.3 MB view details)
+Uploaded Aug 30, 2024 CPython 3.10 macOS 12.0+ ARM64
+
+ai_edge_litert-1.0.1-cp310-cp310-macosx_10_15_x86_64.whl (2.8 MB view details)
+Uploaded Aug 30, 2024 CPython 3.10 macOS 10.15+ x86-64
+
+ai_edge_litert-1.0.1-cp39-cp39-manylinux_2_17_x86_64.whl (2.2 MB view details)
+Uploaded Aug 30, 2024 CPython 3.9 manylinux: glibc 2.17+ x86-64
+
+ai_edge_litert-1.0.1-cp39-cp39-macosx_12_0_arm64.whl (2.3 MB view details)
+Uploaded Aug 30, 2024 CPython 3.9 macOS 12.0+ ARM64
+
+ai_edge_litert-1.0.1-cp39-cp39-macosx_10_15_x86_64.whl (2.8 MB view details)
+Uploaded Aug 30, 2024 CPython 3.9 macOS 10.15+ x86-64
+```
+
+```text
+Built Distributions
+tflite_support-0.4.4-cp311-cp311-manylinux2014_x86_64.whl (60.8 MB view details)
+Uploaded Jul 12, 2023 CPython 3.11
+
+tflite_support-0.4.4-cp311-cp311-macosx_10_11_x86_64.whl (58.3 MB view details)
+Uploaded Jul 12, 2023 CPython 3.11 macOS 10.11+ x86-64
+
+tflite_support-0.4.4-cp310-cp310-manylinux2014_x86_64.whl (60.8 MB view details)
+Uploaded Jul 12, 2023 CPython 3.10
+
+tflite_support-0.4.4-cp310-cp310-macosx_10_11_x86_64.whl (58.3 MB view details)
+Uploaded Jul 12, 2023 CPython 3.10 macOS 10.11+ x86-64
+
+tflite_support-0.4.4-cp39-cp39-manylinux2014_x86_64.whl (60.8 MB view details)
+Uploaded Jul 12, 2023 CPython 3.9
+
+tflite_support-0.4.4-cp39-cp39-manylinux2014_armv7l.whl (33.2 MB view details)
+Uploaded Jul 12, 2023 CPython 3.9
+
+tflite_support-0.4.4-cp39-cp39-manylinux2014_aarch64.whl (43.1 MB view details)
+Uploaded Jul 12, 2023 CPython 3.9
+
+tflite_support-0.4.4-cp39-cp39-macosx_10_11_x86_64.whl (58.3 MB view details)
+Uploaded Jul 12, 2023 CPython 3.9 macOS 10.11+ x86-64
+
+tflite_support-0.4.4-cp38-cp38-manylinux2014_armv7l.whl (33.2 MB view details)
+Uploaded Jul 12, 2023 CPython 3.8
+
+tflite_support-0.4.4-cp38-cp38-manylinux2014_aarch64.whl (43.1 MB view details)
+Uploaded Jul 12, 2023 CPython 3.8
+
+tflite_support-0.4.4-cp37-cp37m-manylinux2014_armv7l.whl (33.2 MB view details)
+Uploaded Jul 12, 2023 CPython 3.7m
+
+tflite_support-0.4.4-cp37-cp37m-manylinux2014_aarch64.whl (43.1 MB view details)
+Uploaded Jul 12, 2023 CPython 3.7m
+```
+
+Bottom line:
+
+* `ai-edge-litert` — 100% ❌ (no ARM distributions for RPi)
+* `tflite-litert` - Try with Python 3.9 (`tflite_support-0.4.4-cp39-cp39-manylinux2014_armv7l.whl`)
+
+
+## PyEnv
+
+[Automatic installation](https://github.com/pyenv/pyenv?tab=readme-ov-file#1-automatic-installer-recommended):
+
+```sh
+curl https://pyenv.run | bash
+```
+
+## Compiling Python 3.9
+
+```sh
+# Solves build issue: "ERROR: The Python ssl extension was not compiled". Installs 'openssl' and few other libs as its dependancies.
+sudo apt-get install -y libssl-dev libffi-dev
+```
+```sh
+# Solves build warnings:
+#  * No module named '_bz2'
+#  * No module named '_curses'
+#  * No module named '_sqlite3'
+#  * No module named 'readline'
+#  * No module named '_lzma'
+sudo apt-get install -y \
+    libbz2-dev \
+    libncurses5-dev libncursesw5-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    liblzma-dev
+```
+```sh
+pyenv install 3.9
+```
+
+A clean installation this time! ✨
+
+## Back to TFLite
+
+Refresh shell -> `pyenv virtualenv tflite` -> `pyenv activate tflite`, then:
+
+```sh
+pip install "tflite-support>=0.4.2"
+# Installing collected packages: flatbuffers, pycparser, pybind11, protobuf, numpy, absl-py, CFFI, sounddevice, tflite-support
+# Successfully installed CFFI-1.17.1 absl-py-2.1.0 flatbuffers-20181003210633 numpy-2.0.2 protobuf-3.20.3 pybind11-2.13.6 pycparser-2.22 sounddevice-0.5.1 tflite-support-0.4.4
+pip install "opencv-python-headless==4.10.0.84"
+# Using cached opencv_python_headless-4.10.0.84-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (29.3 MB)
+# Installing collected packages: opencv-python-headless
+pip install "numpy==1.26.4"
+#     Uninstalling numpy-2.0.2:
+#       Successfully uninstalled numpy-2.0.2
+# Successfully installed numpy-1.26.4
+```
+
+Another clean installation! ✨
+
+#### Test
+
+```python
+import cv2
+
+from tflite_support.task import core
+from tflite_support.task import processor
+from tflite_support.task import vision
+```
+
 
 ## Pipx / Hatch (skipped)
 
