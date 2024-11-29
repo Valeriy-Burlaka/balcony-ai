@@ -15,7 +15,7 @@ def timeit(task_name: str | None = None):
     try:
         yield elapsed
     finally:
-        elapsed_time_seconds = round(time.monotonic() - start_time, 2)
+        elapsed_time_seconds = round(time.monotonic() - start_time, 3)
         elapsed["seconds"] = elapsed_time_seconds
         if task_name:
             logger.debug(f"{task_name} took {elapsed_time_seconds} seconds.")
