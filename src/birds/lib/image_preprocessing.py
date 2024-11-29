@@ -41,14 +41,16 @@ def read_image(image_path: str) -> np.ndarray:
     return cv2.imread(image_path)
 
 def preprocess_image(image: np.ndarray, target_size: int) -> np.ndarray:
-    # Convert the image from BGR to RGB as required by the TFLite model.
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # Convert the image from BGR to RGB as required by the TFLite model. # [26/11/24, Val]: Wat? Then why convert back before returning?
+    # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     image = letterbox_landscape_image_to_square(image)
 
     image = downsample_image(image, target_size=target_size)
 
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+    # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     return image
 
