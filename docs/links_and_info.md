@@ -20,3 +20,8 @@ Not seen yet:
 The best!
 
 * https://www.british-birdsongs.uk/magpie/
+
+# Amazing - BirdNET
+
+* [Audio data processing](https://github.com/kahst/BirdNET-Analyzer).
+* [Live map of bird sound detections](https://app.birdweather.com/) — over 1000 stations world-wide.
