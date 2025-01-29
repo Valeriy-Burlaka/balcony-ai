@@ -70,6 +70,14 @@ lspci -nn | grep 089a
 
 ## TF Lite
 
+### Edge TPU Compiler
+
+`tflite` != `edgetpu`. A `tflite` model need to be converted using the Edge TPU compiler into a file that's compatible with the Edge TPU.
+See the Coral [page](https://coral.ai/docs/edgetpu/compiler/).
+
+* Only available on Debian and x86_64 architecture.
+* Use [web-based](https://colab.research.google.com/github/google-coral/tutorials/blob/master/compile_for_edgetpu.ipynb) compiler
+
 ### TensorFlow Lite Runtime: Libs
 
 Tried to `pip install tflite-support` [library](https://pypi.org/project/tflite-support/) used in the official Tensorflow [tutorial](https://github.com/tensorflow/examples/blob/master/lite/examples/object_detection/raspberry_pi/requirements.txt) — failed, as the only available version was some 0.1.1 alpha:
@@ -121,6 +129,8 @@ As with previous libs, this one is also perfectly [available](https://pypi.org/p
 
 Indeed, it looks that for Python 3.11/ARM combination, the `ai-edge-litert` lib is available only for Mac OS, plus in 2x `x86_64` distributions for Linux/Mac.
 The `tflite-support` lib is not available for Py 3.11/ARM at all, only for `x86_64`:
+
+[link](https://pypi.org/project/ai-edge-litert/#files):
 
 ```text
 Built Distributions
@@ -259,6 +269,46 @@ from tflite_support.task import core
 from tflite_support.task import processor
 from tflite_support.task import vision
 ```
+
+#### Test next
+
+```python
+# ... imports
+
+# Initialize the object detection model
+model = "efficientdet_lite0.tflite"
+enable_edgetpu = True
+num_threads = 4
+
+base_options = core.BaseOptions(
+    file_name=model,
+    use_coral=enable_edgetpu,
+    num_threads=num_threads,
+)
+detection_options = processor.DetectionOptions(max_results=3, score_threshold=0.3)
+options = vision.ObjectDetectorOptions(
+    base_options=base_options,
+    detection_options=detection_options,
+)
+
+detector = vision.ObjectDetector.create_from_options(options)
+print(detector)
+```
+
+error:
+
+```text
+File "~/home/val~/.pyenv/versions/3.9.20/envs/tflite/lib/python3.9/site-packages/tensorflow_lite_support/python/task/vision/object_detector.py", line 90, in create_from_options
+    detector = _CppObjectDetector.create_from_options(
+RuntimeError: Plugin did not create EdgeTpuCoral delegate.
+```
+
+### Fixing "Plugin did not create EdgeTpuCoral delegate."
+
+**Checklist:**
+
+- [x] The [Edge TPU Runtime](https://coral.ai/software/#edgetpu-runtime) installed (`libedgetpu1-std`)
+- [x] The Coral driver (`gasket-dkms`) — installed, `1.0-18`
 
 
 ## Pipx / Hatch (skipped)
