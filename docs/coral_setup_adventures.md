@@ -1,3 +1,111 @@
+# Intro
+
+## Goal
+
+To run model inference on the M.2 Dual Edge TPU [Accelerator](https://coral.ai/docs/m2/get-started/) with Python.
+
+## Given
+
+- `.tflite` models are the models that run on the Edge devices (smartphones, Raspberry PIs, etc.). They are smaller and more energy-efficient.
+- For Edge **TPUs**, we need another type of a `.tflite` model, [compiled](https://coral.ai/docs/edgetpu/compiler/#system-requirements) specifically for it. They typically have a `_edgetpu.tflite` suffix.
+- Coral M.2 Edge TPU was made compayible with TFlite (Tensorflow Lite) API ([link](https://coral.ai/docs/edgetpu/tflite-python/)) so, in an ideal world, I should be able to run a `.tflite` model on Edge TPU with [minimal modifications](https://coral.ai/docs/edgetpu/tflite-python/#update-existing-tf-lite-code-for-the-edge-tpu).
+
+
+## Need:
+
+1. M.2 [setup](https://coral.ai/docs/m2/get-started/)
+
+    Checks:
+
+    ```bash
+    # Verify that the accelerator module is detected:
+    lspci -nn | grep 089a
+    # This Should print 2 devices. E.g.:
+    0000:03:00.0 System peripheral [0880]: Global Unichip Corp. Coral Edge TPU [1ac1:089a]
+    0000:04:00.0 System peripheral [0880]: Global Unichip Corp. Coral Edge TPU [1ac1:089a]
+
+    # Verify that the PCIe driver is loaded:
+    ls /dev/apex_0
+    # Should echo back "/dev/apex_0"
+    ```
+
+2. Edge TPU [compiler](https://coral.ai/docs/edgetpu/compiler/#download) to compile a regular `.tflite` model to `_edgetpu.tflite` format.
+
+    Checks:
+
+    ```bash
+    edgetpu_compiler [options] model...
+    ```
+
+3. TFLite runtime
+
+4. (Optionally) Pycoral library.
+
+    a. [deb definition](https://github.com/google-coral/pycoral/blob/master/debian/control)
+    b. Compatible only with `Python <=3.9` (`<<3.10`):
+
+        ```bash
+        % apt-cache show python3-pycoral
+            Package: python3-pycoral
+            Source: coral
+            Version: 2.0.0
+            Installed-Size: 2911
+            Maintainer: Coral <coral-support@google.com>
+            Architecture: arm64
+            Depends: libc6, libedgetpu1-std (= 16.0) | libedgetpu1 (= 16.0), libgcc1, libstdc++6, python3-numpy, python3-pil, python3-tflite-runtime (= 2.5.0.post1), python3 (<< 3.10), python3:any (>= 3.3.2-2~)
+            Description: Coral Python API
+            Python library for interfacing with the Edge TPU on various Coral products
+        ```
+    c. Even if I try to build it from sources, it depends on `python3-tflite-runtime (= 2.5.0.post1)`, which also requires Python `<3.9`:
+
+        ```bash
+        % apt-cache show python3-tflite-runtime
+            Package: python3-tflite-runtime
+            Source: tflite-runtime
+            Version: 2.5.0.post1
+            Installed-Size: 13173
+            Maintainer: TensorFlow team <packages@tensorflow.org>
+            Architecture: arm64
+            Depends: python3 (<< 3.10), python3-numpy (>= 1:1.12.1), python3:any (>= 3.3.2-2~), libc6 (>= 2.14), libgcc1 (>= 1:4.7), libstdc++6 (>= 6)
+            Description: TensorFlow Lite is for mobile and embedded devices.
+            TensorFlow Lite is the official solution for running machine learning models on
+            mobile and embedded devices. It enables on-device machine learning inference
+            with low latency and a small binary size on Android, iOS, and other operating
+            systems.
+        ```
+
+5. (Optionally but sort of *Mandatory*): They deprecated TFLite Runtime and replaced it with [LiteRT]()
+
+## Status
+
+1. Both checks pass
+2. Cannot install:
+
+    ```bash
+    E: Unable to locate package edgetpu-compiler
+    ```
+
+    This note explains it?
+
+    > The Edge TPU Compiler is no longer available for ARM64 systems (such as the Coral Dev Board), beginning with version 2.1. We recommend compiling your model on a more powerful desktop.
+
+    **Solution**: Try [web-based compiler](https://colab.research.google.com/github/google-coral/tutorials/blob/master/compile_for_edgetpu.ipynb).
+
+3. Cannot install (Py version)
+4. Cannot install (Py version)
+5. Cannot install - unavailable for `aarch64` architecture ([link](https://pypi.org/project/ai-edge-litert/#files))
+
+## Possible solutions
+
+1. Use older Rasp OS installation that uses `python-3.9` as the default.
+2. Use Docker image inside the RPi.
+
+## Other
+
+* Related issue — https://github.com/google-coral/edgetpu/issues/777
+
+
+
 ## Installing the driver for TPU (still ongoing)
 
 ```sh
