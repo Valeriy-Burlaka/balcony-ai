@@ -99,6 +99,7 @@ To run model inference on the M.2 Dual Edge TPU [Accelerator](https://coral.ai/d
 
 1. Use older Rasp OS installation that uses `python-3.9` as the default.
 2. Use Docker image inside the RPi.
+3. Try to [build](https://coral.ai/docs/notes/build-coral/#build-the-libcoral-api) `tflite_runtime` from sources.
 
 ## Other
 
