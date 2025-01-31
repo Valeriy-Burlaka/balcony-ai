@@ -102,6 +102,7 @@ To run model inference on the M.2 Dual Edge TPU [Accelerator](https://coral.ai/d
 
 ## Other
 
+* Coral software - https://coral.ai/software/#edgetpu-runtime
 * Related issue — https://github.com/google-coral/edgetpu/issues/777
 
 
