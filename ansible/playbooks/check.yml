@@ -1,0 +1,25 @@
+---
+- name: Check basic connectivity and system info
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Ping the Raspberry Pi
+      ansible.builtin.ping:
+
+    - name: Get system uptime
+      ansible.builtin.command: uptime
+      register: uptime_output
+      changed_when: false
+
+    - name: Display uptime
+      ansible.builtin.debug:
+        var: uptime_output.stdout
+
+    - name: Get Python version
+      ansible.builtin.command: python3 --version
+      register: python_version
+      changed_when: false
+
+    - name: Display Python version
+      ansible.builtin.debug:
+        var: python_version.stdout

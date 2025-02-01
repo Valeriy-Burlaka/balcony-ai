@@ -60,6 +60,20 @@ extra-dependencies = [
   "jupyterlab",
 ]
 
+[tool.hatch.envs.infra]
+dependencies = [
+  "ansible",
+  "ansible-lint",
+]
+
+[tool.hatch.envs.infra.env-vars]
+ANSIBLE_CONFIG = "ansible/ansible.cfg"
+
+[tool.hatch.envs.infra.scripts]
+ping = "ansible all -m ping"
+check = "ansible-playbook ansible/playbooks/check.yml {args}"
+lint = "ansible-lint ansible/playbooks/*.yml"
+
 [tool.coverage.run]
 source_pkgs = ["birds", "tests"]
 branch = true
