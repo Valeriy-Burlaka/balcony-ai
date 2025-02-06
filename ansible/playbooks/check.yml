@@ -11,14 +11,22 @@
       register: uptime_output
       changed_when: false
 
-    - name: Display uptime
-      ansible.builtin.debug:
-        var: uptime_output.stdout
-
     - name: Get Python version
       ansible.builtin.command: python3 --version
       register: python_version
       changed_when: false
+
+    - name: Display architecture
+      ansible.builtin.debug:
+        var: ansible_architecture
+
+    - name: Display release
+      ansible.builtin.debug:
+        var: ansible_distribution_release
+
+    - name: Display uptime
+      ansible.builtin.debug:
+        var: uptime_output.stdout
 
     - name: Display Python version
       ansible.builtin.debug:
