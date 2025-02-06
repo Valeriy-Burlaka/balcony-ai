@@ -16,15 +16,23 @@
       register: python_version
       changed_when: false
 
-    - name: Display architecture
+    - name: Display host architecture
       ansible.builtin.debug:
         var: ansible_architecture
 
-    - name: Display release
+    - name: Display OS distribution
+      ansible.builtin.debug:
+        var: ansible_distribution
+
+    - name: Display OS release version
       ansible.builtin.debug:
         var: ansible_distribution_release
 
-    - name: Display uptime
+    - name: Display current user
+      ansible.builtin.debug:
+        var: lookup('env', 'USER')
+
+    - name: Display host uptime
       ansible.builtin.debug:
         var: uptime_output.stdout
 
