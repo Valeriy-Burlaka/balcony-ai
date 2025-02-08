@@ -73,6 +73,7 @@ ANSIBLE_CONFIG = "ansible/ansible.cfg"
 ping = "ansible all -m ping"
 check = "ansible-playbook ansible/playbooks/check.yml {args}"
 lint = "ansible-lint ansible/playbooks/*.yml"
+setup = "ansible-playbook ansible/playbooks/setup.yaml {args}"
 
 [tool.coverage.run]
 source_pkgs = ["birds", "tests"]

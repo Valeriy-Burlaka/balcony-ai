@@ -1,0 +1,8 @@
+---
+- name: Setup Raspberry Pi
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Include Docker installation tasks
+      ansible.builtin.include_tasks:
+        file: ../tasks/docker.yaml
