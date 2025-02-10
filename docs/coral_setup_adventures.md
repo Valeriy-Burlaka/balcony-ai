@@ -184,14 +184,13 @@ And [this](https://coral.ai/docs/m2/get-started/#2a-on-linux) is a vanilla setup
       * Buy:
         * RPi AI Hat: https://buyzero.de/en/products/raspberry-pi-ai-hat-13-26-tops
         * Combo Ai Hat + NVM: https://buyzero.de/en/products/pineboards-ai-bundle-hailo-8l-nvme-2280-fur-raspberry-pi-5
-
+8. Migrate to Jetson Nano or similar?? [Link](https://developer.nvidia.com/embedded/jetson-nano)
 
 ## Other
 
 * Coral software - https://coral.ai/software/#edgetpu-runtime
 * Related issue — https://github.com/google-coral/edgetpu/issues/777
-
-
+* Another poor soul trying this setup: https://github.com/StefansAI/Yolov8_Rpi5_CoralUSB
 
 ## Installing the driver for TPU (still ongoing)
 
