@@ -25,3 +25,7 @@ The best!
 
 * [Audio data processing](https://github.com/kahst/BirdNET-Analyzer).
 * [Live map of bird sound detections](https://app.birdweather.com/) — over 1000 stations world-wide.
+
+# TFLite examples
+
+* https://github.com/raspberrypi/picamera2/tree/main/examples/tensorflow

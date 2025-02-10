@@ -4,6 +4,8 @@
 
 To run model inference on the M.2 Dual Edge TPU [Accelerator](https://coral.ai/docs/m2/get-started/) with Python.
 
+Coral [tech specs](https://coral.ai/products/m2-accelerator-ae/#tech-specs).
+
 ## Given
 
 - `.tflite` models are the models that run on the Edge devices (smartphones, Raspberry PIs, etc.). They are smaller and more energy-efficient.
@@ -13,20 +15,34 @@ To run model inference on the M.2 Dual Edge TPU [Accelerator](https://coral.ai/d
 
 ## Need:
 
+[This](https://coral.ai/docs/notes/build-coral/#required-components) is the best description of all required components I found so far.
+And [this](https://coral.ai/docs/m2/get-started/#2a-on-linux) is a vanilla setup & check guide (only partially helpful).
+
 1. M.2 [setup](https://coral.ai/docs/m2/get-started/)
 
     Checks:
 
     ```bash
     # Verify that the accelerator module is detected:
+
     lspci -nn | grep 089a
+
     # This Should print 2 devices. E.g.:
     0000:03:00.0 System peripheral [0880]: Global Unichip Corp. Coral Edge TPU [1ac1:089a]
     0000:04:00.0 System peripheral [0880]: Global Unichip Corp. Coral Edge TPU [1ac1:089a]
 
-    # Verify that the PCIe driver is loaded:
-    ls /dev/apex_0
+    # Verify that the PCIe driver (gasket-dkms) is loaded:
+
+    ls /dev | grep apex
+
     # Should echo back "/dev/apex_0"
+
+    # Verify the Edge TPU Runtime (libedgetpu) is installed:
+
+    python3 -c "from ctypes.util import find_library; print(find_library(\"edgetpu\"))"
+
+    # should echo back "libedgetpu.so.1"
+
     ```
 
 2. Edge TPU [compiler](https://coral.ai/docs/edgetpu/compiler/#download) to compile a regular `.tflite` model to `_edgetpu.tflite` format.
@@ -38,6 +54,17 @@ To run model inference on the M.2 Dual Edge TPU [Accelerator](https://coral.ai/d
     ```
 
 3. TFLite runtime
+
+    a. Again, not compatible with Python > 3.9
+    b. Can try to cross-compile from x86_64 to ARM64 (there is no supported toolchain for compiling ARM-to-ARM)
+    c. Should be compiled from the same `TENSORFLOW_COMMIT` as the rest of the libraries.
+    d. Test:
+
+        ```python
+        from tflite_runtime.interpreter import Interpreter, load_delegate
+
+        interpreter = Interpreter(model_path='efficientdet_lite0_edgetpu.tflite',experimental_delegates=[load_delegate('libedgetpu.so.1')])
+        ```
 
 4. (Optionally) Pycoral library.
 
@@ -74,7 +101,24 @@ To run model inference on the M.2 Dual Edge TPU [Accelerator](https://coral.ai/d
             systems.
         ```
 
-5. (Optionally but sort of *Mandatory*): They deprecated TFLite Runtime and replaced it with [LiteRT]()
+    d. Test:
+
+        ```bash
+        # https://coral.ai/docs/notes/build-coral/#test-everything
+
+        mkdir coral && cd coral
+
+        git clone https://github.com/google-coral/tflite.git
+
+        cd tflite/python/examples/classification
+
+        bash install_requirements.sh
+
+        python3 classify_image.py \
+        --model models/mobilenet_v2_1.0_224_inat_bird_quant_edgetpu.tflite \
+        --labels models/inat_bird_labels.txt \
+        --input images/parrot.jpg
+        ```
 
 ## Status
 
@@ -98,8 +142,49 @@ To run model inference on the M.2 Dual Edge TPU [Accelerator](https://coral.ai/d
 ## Possible solutions
 
 1. Use older Rasp OS installation that uses `python-3.9` as the default.
-2. Use Docker image inside the RPi.
-3. Try to [build](https://coral.ai/docs/notes/build-coral/#build-the-libcoral-api) `tflite_runtime` from sources.
+2. Install `python-3.9` as system default (Install `3.9` & use `update-alternatives --config python`)
+   * Pros: Should be easy?
+   * Cons: Potential issues with system libs relying on `3.11` features; Going backward - losing access to new features, performance and security updates.
+     (e.g., Python 3.11 is said to be between 10-60% [faster than 3.10](https://docs.python.org/3/whatsnew/3.11.html#summary-release-highlights))
+   * Links:
+     * https://thelinuxcode.com/change-from-default-to-alternative-python-version-debian/
+     * https://pythonspeed.com/articles/base-image-python-docker-images/
+3. Use Docker image inside the RPi.
+   * Pros: Should be easy?
+     * Not sure I completely understand how will it work with the device drivers. Privileged access to host? If host provides drivers, then it makes no sense as I can't install drivers on host correctly due to versions mismatch. If container controls drivers then it needs to control host's _kernel?_ Brrr!
+   * Cons: Complicates development; Potential issues with making drivers work correctly; Adding a layer of virtualization will affect performance.
+4. Try to [build](https://coral.ai/docs/notes/build-coral/#build-the-libcoral-api) `pycoral` and other packages from from sources.
+   * Pros: Full control in case of success; Keeping same dev process; Staying on host avoids another layer of virtualization.
+   * Cons: Potential rabbit hole of unimaginable depth.
+   * Links:
+     * `tflite_runtime` [build script](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/tools/pip_package/build_pip_package_with_cmake.sh)
+       (see [also](./compile_tflite_runtime.sh))
+     * `gasket_driver` [build instructions](https://github.com/google/gasket-driver/blob/main/README.md)
+     * `libedgetpu` [build instructions](https://github.com/google-coral/libedgetpu/blob/master/makefile_build/README.md)
+5. Use `pyenv` with `3.9` and use only PyPi libs, not .deb. Which means no `pycoral` but `tflite_runtime` will work.
+   * Pros: easy
+   * Cons: Tried it, it didn't work with `edgetpu` ("no delegates found error"). Potentially because the `gasket-dkms` package is also not compatible with `3.11` and I had to build it from the sources. Maybe it's functional or maybe it's not (all surface driver checks pass but how to verify it's really working?)
+6. Migrate to [Mendel Linux](https://coral.ai/software/#mendel-linux)?
+   * Unfortunately, only [suppors](https://coral.googlesource.com/docs/+/refs/heads/master/ReadMe.md#what-do-we-support) Coral Dev Board.
+7. Migrate off Coral to Hailo NPU (AI Accelerator)?
+   * Pros:
+      * May entirely solve all stupid issues I have. The single biggest root of all issues I have with loading the TPU delegate is that Google abandoned its product (again. surprise-surprise!), - there is almost no up-to-date documentation, the drivers are 5+ years old, `tflite_runtime` is deprecated in favor of new shiny `litert` lib (which doesn't support ARM), and so on (the rant list is big here).
+      * More power and better efficiency. 13 TOPS vs. 8 (2x4), 4 TOPS/W vs. 2 TOPS/W. Yikes!
+      * Promises to work with any framework: TF, TFLite, PyTorch, Keras, etc.:
+       _Comprehensive dataflow compiler enables customer to port their neural network models easily & quickly_ ([link](https://hailo.ai/products/ai-accelerators/hailo-8l-ai-accelerator-for-ai-light-applications/#hailo8l-features))
+      * Comprehensive [model garden](https://hailo.ai/products/hailo-software/model-explorer/)?
+   * Cons:
+      * A lot of unknowns. It's a new product with an unknown quality of documentation, their SDK, etc. Some real chance to get stuck when converting some experimental model, etc.
+      * I will have to assemble another Pi (~250 EUR)
+   * Links:
+      * [Product page](https://hailo.ai/products/ai-accelerators/)
+      * [RPi](https://www.raspberrypi.com/products/ai-kit/)
+      * [M2 form factors](https://www.dell.com/support/kbdoc/en-us/000144170/how-to-distinguish-the-differences-between-m-2-cards), https://www.easeus.com/computer-instruction/m2-2230-vs-2280.html
+      * [Software support](https://hailo.ai/products/hailo-software/hailo-ai-software-suite/#sw-modelzoo).
+      * Buy:
+        * RPi AI Hat: https://buyzero.de/en/products/raspberry-pi-ai-hat-13-26-tops
+        * Combo Ai Hat + NVM: https://buyzero.de/en/products/pineboards-ai-bundle-hailo-8l-nvme-2280-fur-raspberry-pi-5
+
 
 ## Other
 
