@@ -4,6 +4,7 @@ RUN apt-get update && \
     apt-get install -y \
     curl \
     git \
+    htop \
     gnupg2 \
     vim \
     wget
