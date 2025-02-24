@@ -1,0 +1,252 @@
+$ edgetpu_compiler -s -aaa efficientdet_lite0.tflite
+Edge TPU Compiler version 16.0.384591198
+Started a compilation timeout timer of 180 seconds.
+
+Model compiled successfully in 3129 ms.
+
+Input model: efficientdet_lite0.tflite
+Input size: 4.35MiB
+Output model: efficientdet_lite0_edgetpu.tflite
+Output size: 5.66MiB
+On-chip memory used for caching model parameters: 4.49MiB
+On-chip memory remaining for caching model parameters: 3.01MiB
+Off-chip memory used for streaming uncached model parameters: 0.00B
+Number of Edge TPU subgraphs: 1
+Total number of operations: 267
+Operation log: efficientdet_lite0_edgetpu.log
+
+Model successfully compiled but not all operations are supported by the Edge TPU. A percentage of the model will instead run on the CPU, which is slower. If possible, consider updating your model to use only operations supported by the Edge TPU. For details, visit g.co/coral/model-reqs.
+Number of operations that will run on Edge TPU: 260
+Number of operations that will run on CPU: 7
+
+Operator                       Count      Status
+
+QUANTIZE                       1          Mapped to Edge TPU
+CONV_2D                        102        Mapped to Edge TPU
+DEQUANTIZE                     2          Operation is working on an unsupported data type
+RESIZE_NEAREST_NEIGHBOR        12         Mapped to Edge TPU
+DEPTHWISE_CONV_2D              80         Mapped to Edge TPU
+CONCATENATION                  1          Operation is otherwise supported, but not mapped due to some unspecified limitation
+CONCATENATION                  1          Mapped to Edge TPU
+RESHAPE                        2          Operation is otherwise supported, but not mapped due to some unspecified limitation
+RESHAPE                        8          Mapped to Edge TPU
+ADD                            42         Mapped to Edge TPU
+CUSTOM                         1          Operation is working on an unsupported data type
+MAX_POOL_2D                    14         Mapped to Edge TPU
+LOGISTIC                       1          Operation is otherwise supported, but not mapped due to some unspecified limitation
+Compilation child process completed within timeout period.
+Compilation succeeded!
+
+
+$ edgetpu_compiler -s -aaa efficientdet-tflite-lite1-detection-default-v1.tflite
+Edge TPU Compiler version 16.0.384591198
+Started a compilation timeout timer of 180 seconds.
+
+Model compiled successfully in 4030 ms.
+
+Input model: efficientdet-tflite-lite1-detection-default-v1.tflite
+Input size: 5.79MiB
+Output model: efficientdet-tflite-lite1-detection-default-v1_edgetpu.tflite
+Output size: 7.64MiB
+On-chip memory used for caching model parameters: 6.29MiB
+On-chip memory remaining for caching model parameters: 1.21MiB
+Off-chip memory used for streaming uncached model parameters: 0.00B
+Number of Edge TPU subgraphs: 1
+Total number of operations: 322
+Operation log: efficientdet-tflite-lite1-detection-default-v1_edgetpu.log
+
+Model successfully compiled but not all operations are supported by the Edge TPU. A percentage of the model will instead run on the CPU, which is slower. If possible, consider updating your model to use only operations supported by the Edge TPU. For details, visit g.co/coral/model-reqs.
+Number of operations that will run on Edge TPU: 315
+Number of operations that will run on CPU: 7
+
+Operator                       Count      Status
+
+DEQUANTIZE                     2          Operation is working on an unsupported data type
+MAX_POOL_2D                    18         Mapped to Edge TPU
+ADD                            58         Mapped to Edge TPU
+CUSTOM                         1          Operation is working on an unsupported data type
+CONCATENATION                  1          Mapped to Edge TPU
+CONCATENATION                  1          Operation is otherwise supported, but not mapped due to some unspecified limitation
+RESHAPE                        8          Mapped to Edge TPU
+RESHAPE                        2          Operation is otherwise supported, but not mapped due to some unspecified limitation
+RESIZE_NEAREST_NEIGHBOR        16         Mapped to Edge TPU
+LOGISTIC                       1          Operation is otherwise supported, but not mapped due to some unspecified limitation
+CONV_2D                        120        Mapped to Edge TPU
+DEPTHWISE_CONV_2D              93         Mapped to Edge TPU
+QUANTIZE                       1          Mapped to Edge TPU
+Compilation child process completed within timeout period.
+Compilation succeeded!
+
+
+
+$ edgetpu_compiler -s -aaa efficientdet-tflite-lite2-detection-default-v1.tflite
+Edge TPU Compiler version 16.0.384591198
+Started a compilation timeout timer of 180 seconds.
+
+Model compiled successfully in 10696 ms.
+
+Input model: efficientdet-tflite-lite2-detection-default-v1.tflite
+Input size: 7.21MiB
+Output model: efficientdet-tflite-lite2-detection-default-v1_edgetpu.tflite
+Output size: 10.17MiB
+On-chip memory used for caching model parameters: 7.14MiB
+On-chip memory remaining for caching model parameters: 1.25KiB
+Off-chip memory used for streaming uncached model parameters: 705.50KiB
+Number of Edge TPU subgraphs: 1
+Total number of operations: 357
+Operation log: efficientdet-tflite-lite2-detection-default-v1_edgetpu.log
+
+Model successfully compiled but not all operations are supported by the Edge TPU. A percentage of the model will instead run on the CPU, which is slower. If possible, consider updating your model to use only operations supported by the Edge TPU. For details, visit g.co/coral/model-reqs.
+Number of operations that will run on Edge TPU: 349
+Number of operations that will run on CPU: 8
+
+Operator                       Count      Status
+
+MAX_POOL_2D                    22         Mapped to Edge TPU
+LOGISTIC                       1          Operation is otherwise supported, but not mapped due to some unspecified limitation
+QUANTIZE                       1          Mapped to Edge TPU
+CONV_2D                        128        Mapped to Edge TPU
+DEQUANTIZE                     2          Operation is working on an unsupported data type
+RESIZE_NEAREST_NEIGHBOR        20         Mapped to Edge TPU
+DEPTHWISE_CONV_2D              101        Mapped to Edge TPU
+CONCATENATION                  1          Operation is otherwise supported, but not mapped due to some unspecified limitation
+CONCATENATION                  1          Mapped to Edge TPU
+RESHAPE                        7          Mapped to Edge TPU
+RESHAPE                        3          Operation is otherwise supported, but not mapped due to some unspecified limitation
+CUSTOM                         1          Operation is working on an unsupported data type
+ADD                            69         Mapped to Edge TPU
+Compilation child process completed within timeout period.
+Compilation succeeded!
+
+
+
+$ edgetpu_compiler -s -aaa efficientdet-tflite-lite3-detection-default-v1.tflite
+Edge TPU Compiler version 16.0.384591198
+Started a compilation timeout timer of 180 seconds.
+ERROR: Restored original execution plan after delegate application failure.
+Compilation failed: Compilation failed due to large activation tensors in model.
+Compilation child process completed within timeout period.
+Compilation failed!
+
+
+edgetpu_compiler -s -aaa efficientdet-tflite-lite3x-detection-default-v1.tflite
+1.tflite
+Edge TPU Compiler version 16.0.384591198
+Started a compilation timeout timer of 180 seconds.
+
+Model compiled successfully in 33544 ms.
+
+Input model: efficientdet-tflite-lite3x-detection-default-v1.tflite
+Input size: 13.32MiB
+Output model: efficientdet-tflite-lite3x-detection-default-v1_edgetpu.tflite
+Output size: 19.60MiB
+On-chip memory used for caching model parameters: 6.96MiB
+On-chip memory remaining for caching model parameters: 8.75KiB
+Off-chip memory used for streaming uncached model parameters: 7.72MiB
+Number of Edge TPU subgraphs: 1
+Total number of operations: 424
+Operation log: efficientdet-tflite-lite3x-detection-default-v1_edgetpu.log
+
+Model successfully compiled but not all operations are supported by the Edge TPU. A percentage of the model will instead run on the CPU, which is slower. If possible, consider updating your model to use only operations supported by the Edge TPU. For details, visit g.co/coral/model-reqs.
+Number of operations that will run on Edge TPU: 414
+Number of operations that will run on CPU: 10
+
+Operator                       Count      Status
+
+LOGISTIC                       1          Operation is otherwise supported, but not mapped due to some unspecified limitation
+RESIZE_NEAREST_NEIGHBOR        24         Mapped to Edge TPU
+DEPTHWISE_CONV_2D              122        Mapped to Edge TPU
+QUANTIZE                       1          Mapped to Edge TPU
+DEQUANTIZE                     2          Operation is working on an unsupported data type
+CONV_2D                        152        Mapped to Edge TPU
+CUSTOM                         1          Operation is working on an unsupported data type
+ADD                            83         Mapped to Edge TPU
+MAX_POOL_2D                    26         Mapped to Edge TPU
+CONCATENATION                  2          Operation is otherwise supported, but not mapped due to some unspecified limitation
+RESHAPE                        6          Mapped to Edge TPU
+RESHAPE                        4          Operation is otherwise supported, but not mapped due to some unspecified limitation
+Compilation child process completed within timeout period.
+Compilation succeeded!
+
+
+
+$ edgetpu_compiler -s -aaa -t 300 efficientdet-tflite-lite4-detection-default-v2.tflite
+Edge TPU Compiler version 16.0.384591198
+Started a compilation timeout timer of 300 seconds.
+
+Model compiled successfully in 181926 ms.
+
+Input model: efficientdet-tflite-lite4-detection-default-v2.tflite
+Input size: 19.88MiB
+Output model: efficientdet-tflite-lite4-detection-default-v2_edgetpu.tflite
+Output size: 40.10MiB
+On-chip memory used for caching model parameters: 7.09MiB
+On-chip memory remaining for caching model parameters: 3.50KiB
+Off-chip memory used for streaming uncached model parameters: 20.51MiB
+Number of Edge TPU subgraphs: 1
+Total number of operations: 483
+Operation log: efficientdet-tflite-lite4-detection-default-v2_edgetpu.log
+
+Model successfully compiled but not all operations are supported by the Edge TPU. A percentage of the model will instead run on the CPU, which is slower. If possible, consider updating your model to use only operations supported by the Edge TPU. For details, visit g.co/coral/model-reqs.
+Number of operations that will run on Edge TPU: 473
+Number of operations that will run on CPU: 10
+
+Operator                       Count      Status
+
+DEQUANTIZE                     2          Operation is working on an unsupported data type
+MAX_POOL_2D                    30         Mapped to Edge TPU
+CUSTOM                         1          Operation is working on an unsupported data type
+ADD                            100        Mapped to Edge TPU
+CONCATENATION                  2          Operation is otherwise supported, but not mapped due to some unspecified limitation
+RESHAPE                        4          Operation is otherwise supported, but not mapped due to some unspecified limitation
+RESHAPE                        6          Mapped to Edge TPU
+RESIZE_NEAREST_NEIGHBOR        28         Mapped to Edge TPU
+CONV_2D                        172        Mapped to Edge TPU
+LOGISTIC                       1          Operation is otherwise supported, but not mapped due to some unspecified limitation
+DEPTHWISE_CONV_2D              136        Mapped to Edge TPU
+QUANTIZE                       1          Mapped to Edge TPU
+Compilation child process completed within timeout period.
+Compilation succeeded!
+
+
+
+$ tar xvzf yolo-v5-tflite-tflite-tflite-model-v1.tar.gz && mv 1.tflite yolo-v5-model-v1.tflite && edgetpu_compil
+er -s -aaa -t 600 yolo-v5-model-v1.tflite
+1.tflite
+Edge TPU Compiler version 16.0.384591198
+Started a compilation timeout timer of 600 seconds.
+
+Model compiled successfully in 26 ms.
+
+Input model: yolo-v5-model-v1.tflite
+Input size: 7.25MiB
+Output model: yolo-v5-model-v1_edgetpu.tflite
+Output size: 7.16MiB
+On-chip memory used for caching model parameters: 0.00B
+On-chip memory remaining for caching model parameters: 0.00B
+Off-chip memory used for streaming uncached model parameters: 0.00B
+Number of Edge TPU subgraphs: 0
+Total number of operations: 268
+Operation log: yolo-v5-model-v1_edgetpu.log
+
+Model successfully compiled but not all operations are supported by the Edge TPU. A percentage of the model will instead run on the CPU, which is slower. If possible, consider updating your model to use only operations supported by the Edge TPU. For details, visit g.co/coral/model-reqs.
+Number of operations that will run on Edge TPU: 0
+Number of operations that will run on CPU: 268
+
+Operator                       Count      Status
+
+CONCATENATION                  18         Operation is working on an unsupported data type
+RESIZE_NEAREST_NEIGHBOR        2          Operation is working on an unsupported data type
+CONV_2D                        62         Operation is working on an unsupported data type
+LOGISTIC                       62         Operation is working on an unsupported data type
+STRIDED_SLICE                  13         Operation is working on an unsupported data type
+MAX_POOL_2D                    3          Operation is working on an unsupported data type
+ADD                            10         Operation is working on an unsupported data type
+SUB                            3          Operation is working on an unsupported data type
+PAD                            6          Operation is working on an unsupported data type
+TRANSPOSE                      3          Operation is working on an unsupported data type
+RESHAPE                        6          Operation is working on an unsupported data type
+MUL                            80         Operation is working on an unsupported data type
+Compilation child process completed within timeout period.
+Compilation succeeded!
+
