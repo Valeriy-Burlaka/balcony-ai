@@ -1,0 +1,289 @@
+% lscpu
+Architecture:             aarch64
+  CPU op-mode(s):         32-bit, 64-bit
+  Byte Order:             Little Endian
+CPU(s):                   4
+  On-line CPU(s) list:    0-3
+Vendor ID:                ARM
+  Model name:             Cortex-A76
+    Model:                1
+    Thread(s) per core:   1
+    Core(s) per cluster:  4
+    Socket(s):            -
+    Cluster(s):           1
+    Stepping:             r4p1
+    CPU(s) scaling MHz:   62%
+    CPU max MHz:          2400.0000
+    CPU min MHz:          1500.0000
+    BogoMIPS:             108.00
+    Flags:                fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+Caches (sum of all):
+  L1d:                    256 KiB (4 instances)
+  L1i:                    256 KiB (4 instances)
+  L2:                     2 MiB (4 instances)
+  L3:                     2 MiB (1 instance)
+Vulnerabilities:
+  Gather data sampling:   Not affected
+  Itlb multihit:          Not affected
+  L1tf:                   Not affected
+  Mds:                    Not affected
+  Meltdown:               Not affected
+  Mmio stale data:        Not affected
+  Reg file data sampling: Not affected
+  Retbleed:               Not affected
+  Spec rstack overflow:   Not affected
+  Spec store bypass:      Mitigation; Speculative Store Bypass disabled via prctl
+  Spectre v1:             Mitigation; __user pointer sanitization
+  Spectre v2:             Mitigation; CSV2, BHB
+  Srbds:                  Not affected
+  Tsx async abort:        Not affected
+
+
+
+
+% sudo modinfo gasket
+filename:       /lib/modules/6.6.51+rpt-rpi-v8/updates/dkms/gasket.ko.xz
+author:         Rob Springer <rspringer@google.com>
+license:        GPL v2
+version:        1.1.4
+description:    Google Gasket driver framework
+import_ns:      DMA_BUF
+srcversion:     584E4F871D5CD164F02B2D2
+depends:
+name:           gasket
+vermagic:       6.6.51+rpt-rpi-v8 SMP preempt mod_unload modversions aarch64
+sig_id:         PKCS#7
+signer:         DKMS module signing key
+sig_key:        4A:25:AF:CA:94:8D:C7:DC:84:31:13:F9:70:2B:9D:E9:41:84:4E:8C
+sig_hashalgo:   sha512
+signature:      7B:01:D0:FF:E8:19:65:98:54:B5:90:46:C1:4C:0D:AC:80:19:5C:F3:
+                92:71:02:71:DA:2A:A7:F0:86:D4:E0:5C:61:3E:28:99:B8:40:4C:1C:
+                56:F4:B3:36:4C:3D:D3:A9:4A:92:E7:E5:BD:31:DD:34:A6:D1:29:2A:
+                C2:38:81:31:7D:D7:EF:70:83:4F:30:35:01:D7:79:5D:F0:B6:02:16:
+                AD:1C:3A:51:F2:AF:01:A8:D0:E6:03:AF:78:DB:DF:E9:BE:D3:F4:13:
+                77:42:59:C1:53:FD:B0:F7:E8:DD:67:84:24:7E:31:F5:D3:9F:E3:B2:
+                AC:0D:6D:B6:04:CE:9C:9D:63:45:2B:B7:0E:36:71:80:05:B3:58:A2:
+                10:23:79:F2:B5:3E:30:14:66:E7:2D:A3:75:9E:37:73:66:B9:66:B3:
+                FC:F3:D6:8E:D2:15:DD:8F:67:C8:29:E1:EE:00:83:5A:21:BC:85:AA:
+                C3:71:54:E8:1E:53:1D:B3:B9:C0:11:4C:D8:16:C0:2E:11:39:75:9B:
+                E7:54:46:2E:DE:7B:72:3B:B9:D3:5E:EC:FD:EE:9B:A1:CA:A7:BA:3C:
+                E1:96:1B:A2:64:52:5E:4A:02:BD:F2:BE:B0:75:EF:04:60:09:EC:58:
+                D1:09:D1:2E:2C:25:8D:B9:CA:1A:38:54:34:BF:AF:12
+parm:           dma_bit_mask:int
+
+
+
+
+% sudo modinfo apex
+filename:       /lib/modules/6.6.51+rpt-rpi-v8/updates/dkms/apex.ko.xz
+author:         John Joseph <jnjoseph@google.com>
+license:        GPL v2
+version:        1.2
+description:    Google Apex driver
+srcversion:     BCFB09A9C4DC598D3A05A9C
+alias:          pci:v00001AC1d0000089Asv*sd*bc*sc*i*
+depends:        gasket
+name:           apex
+vermagic:       6.6.51+rpt-rpi-v8 SMP preempt mod_unload modversions aarch64
+sig_id:         PKCS#7
+signer:         DKMS module signing key
+sig_key:        4A:25:AF:CA:94:8D:C7:DC:84:31:13:F9:70:2B:9D:E9:41:84:4E:8C
+sig_hashalgo:   sha512
+signature:      6F:37:15:41:CD:71:1F:09:A2:C6:7F:73:5E:05:0B:EF:C0:9C:8E:5F:
+                00:5D:13:7E:8A:49:57:4E:F0:0B:E2:54:18:10:A0:93:50:AB:B9:16:
+                59:12:94:89:8F:98:BF:C4:60:46:1C:BB:E0:39:48:24:25:DE:29:95:
+                5E:70:41:58:31:7E:7C:B6:E0:B8:E1:0F:99:26:82:83:30:E1:31:15:
+                45:6A:FB:92:47:74:3B:4E:FA:1F:FA:42:2F:38:24:C4:FA:61:8F:E7:
+                2C:9A:23:78:B6:26:B4:3F:A2:D4:E8:51:A1:62:FE:9F:CE:74:54:01:
+                EE:72:23:42:2E:81:D4:DA:35:94:D1:D4:37:77:1A:68:50:25:06:9F:
+                70:28:A5:4D:40:BD:75:0C:DE:B8:B6:9F:F9:64:86:BA:41:86:2E:F5:
+                5E:18:33:26:E2:E1:3D:0E:65:5D:D2:2D:EF:2D:97:31:AD:EB:57:6D:
+                18:21:CD:37:D2:28:CE:89:2A:94:8F:36:2E:17:24:34:28:B4:FB:07:
+                2E:3D:DD:C3:44:96:7C:BE:4F:FD:5E:7E:CB:A9:EA:46:79:71:07:EF:
+                50:44:24:70:41:E2:79:9E:F8:5A:DC:81:E8:FD:1C:67:C4:DD:58:27:
+                B1:BC:7C:97:9A:1D:4C:D6:90:75:A4:6E:CC:CF:BE:A5
+parm:           allow_power_save:int
+parm:           allow_sw_clock_gating:int
+parm:           allow_hw_clock_gating:int
+parm:           bypass_top_level:int
+parm:           trip_point0_temp:int
+parm:           trip_point1_temp:int
+parm:           trip_point2_temp:int
+parm:           hw_temp_warn1:int
+parm:           hw_temp_warn2:int
+parm:           hw_temp_warn1_en:bool
+parm:           hw_temp_warn2_en:bool
+parm:           temp_poll_interval:int
+
+
+% sudo lspci -vv -s 03:00.0
+0000:03:00.0 System peripheral: Global Unichip Corp. Coral Edge TPU (prog-if ff)
+        Subsystem: Global Unichip Corp. Coral Edge TPU
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0
+        Interrupt: pin A routed to IRQ 39
+        Region 0: Memory at 1800100000 (64-bit, prefetchable) [size=16K]
+        Region 2: Memory at 1800000000 (64-bit, prefetchable) [size=1M]
+        Capabilities: [80] Express (v2) Endpoint, MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 26W
+                DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
+                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop+
+                        MaxPayload 256 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr- TransPend-
+                LnkCap: Port #1, Speed 5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <64ns, L1 <1us
+                        ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+                LnkCtl: ASPM Disabled; RCB 64 bytes, Disabled- CommClk-
+                        ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 5GT/s, Width x1
+                        TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
+                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ NROPrPrP- LTR+
+                         10BitTagComp- 10BitTagReq- OBFF Not Supported, ExtFmt+ EETLPPrefix-
+                         EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
+                         FRS- TPHComp- ExtTPHComp-
+                         AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- LTR- 10BitTagReq- OBFF Disabled,
+                         AtomicOpsCtl: ReqEn-
+                LnkCap2: Supported Link Speeds: 2.5-5GT/s, Crosslink- Retimer- 2Retimers- DRS-
+                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance Preset/De-emphasis: -6dB de-emphasis, 0dB preshoot
+                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete- EqualizationPhase1-
+                         EqualizationPhase2- EqualizationPhase3- LinkEqualizationRequest-
+                         Retimer- 2Retimers- CrosslinkRes: unsupported
+        Capabilities: [d0] MSI-X: Enable- Count=128 Masked-
+                Vector table: BAR=2 offset=00046800
+                PBA: BAR=2 offset=00046068
+        Capabilities: [e0] MSI: Enable- Count=1/32 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [f8] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [100 v1] Vendor Specific Information: ID=1556 Rev=1 Len=008 <?>
+        Capabilities: [108 v1] Latency Tolerance Reporting
+                Max snoop latency: 0ns
+                Max no snoop latency: 0ns
+        Capabilities: [110 v1] L1 PM Substates
+                L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
+                          PortCommonModeRestoreTime=10us PortTPowerOnTime=10us
+                L1SubCtl1: PCI-PM_L1.2- PCI-PM_L1.1- ASPM_L1.2- ASPM_L1.1-
+                           T_CommonMode=0us LTR1.2_Threshold=0ns
+                L1SubCtl2: T_PwrOn=10us
+        Capabilities: [200 v2] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+
+                AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn- ECRCChkCap+ ECRCChkEn-
+                        MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
+                HeaderLog: 00000000 00000000 00000000 00000000
+        Kernel driver in use: apex
+        Kernel modules: apex
+
+
+
+% sudo lspci -vv -s 04:00.0
+0000:04:00.0 System peripheral: Global Unichip Corp. Coral Edge TPU (prog-if ff)
+        Subsystem: Global Unichip Corp. Coral Edge TPU
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0
+        Interrupt: pin A routed to IRQ 39
+        Region 0: Memory at 1800300000 (64-bit, prefetchable) [size=16K]
+        Region 2: Memory at 1800200000 (64-bit, prefetchable) [size=1M]
+        Capabilities: [80] Express (v2) Endpoint, MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 26W
+                DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
+                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop+
+                        MaxPayload 256 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr- TransPend-
+                LnkCap: Port #1, Speed 5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <64ns, L1 <1us
+                        ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+                LnkCtl: ASPM Disabled; RCB 64 bytes, Disabled- CommClk-
+                        ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 5GT/s, Width x1
+                        TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
+                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ NROPrPrP- LTR+
+                         10BitTagComp- 10BitTagReq- OBFF Not Supported, ExtFmt+ EETLPPrefix-
+                         EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
+                         FRS- TPHComp- ExtTPHComp-
+                         AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- LTR- 10BitTagReq- OBFF Disabled,
+                         AtomicOpsCtl: ReqEn-
+                LnkCap2: Supported Link Speeds: 2.5-5GT/s, Crosslink- Retimer- 2Retimers- DRS-
+                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance Preset/De-emphasis: -6dB de-emphasis, 0dB preshoot
+                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete- EqualizationPhase1-
+                         EqualizationPhase2- EqualizationPhase3- LinkEqualizationRequest-
+                         Retimer- 2Retimers- CrosslinkRes: unsupported
+        Capabilities: [d0] MSI-X: Enable- Count=128 Masked-
+                Vector table: BAR=2 offset=00046800
+                PBA: BAR=2 offset=00046068
+        Capabilities: [e0] MSI: Enable- Count=1/32 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [f8] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [100 v1] Vendor Specific Information: ID=1556 Rev=1 Len=008 <?>
+        Capabilities: [108 v1] Latency Tolerance Reporting
+                Max snoop latency: 0ns
+                Max no snoop latency: 0ns
+        Capabilities: [110 v1] L1 PM Substates
+                L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
+                          PortCommonModeRestoreTime=10us PortTPowerOnTime=10us
+                L1SubCtl1: PCI-PM_L1.2- PCI-PM_L1.1- ASPM_L1.2- ASPM_L1.1-
+                           T_CommonMode=0us LTR1.2_Threshold=0ns
+                L1SubCtl2: T_PwrOn=10us
+        Capabilities: [200 v2] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+
+                AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn- ECRCChkCap+ ECRCChkEn-
+                        MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
+                HeaderLog: 00000000 00000000 00000000 00000000
+        Kernel driver in use: apex
+        Kernel modules: apex
+
+
+
+% sudo lsmod | grep apex
+apex                   20480  0
+gasket                 98304  1 apex
+
+
+
+% sudo sh -c 'echo "options apex interrupt_mode=2" > /etc/modprobe.d/apex.conf'
+sudo update-initramfs -u
+update-initramfs: Generating /boot/initrd.img-6.6.51+rpt-rpi-v8
+'/boot/initrd.img-6.6.51+rpt-rpi-v8' -> '/boot/firmware/initramfs8'
+update-initramfs: Generating /boot/initrd.img-6.6.51+rpt-rpi-2712
+'/boot/initrd.img-6.6.51+rpt-rpi-2712' -> '/boot/firmware/initramfs_2712'
+
+
+% sudo rmmod apex
+sudo rmmod gasket
+sudo modprobe gasket
+sudo modprobe apex
+sudo dmesg | grep -E "apex|gasket"
+rmmod: ERROR: ../libkmod/libkmod-module.c:856 kmod_module_remove_module() could not remove 'gasket': Device or resource busy
+rmmod: ERROR: could not remove module gasket: Device or resource busy
+[    2.961679] gasket: loading out-of-tree module taints kernel.
+[    2.974084] apex: unknown parameter 'interrupt_mode' ignored
+[    2.984212] apex 0000:03:00.0: enabling device (0000 -> 0002)
+[    2.990567] apex 0000:03:00.0: Couldn't initialize interrupts: -28
+[    2.995229] apex 0000:04:00.0: enabling device (0000 -> 0002)
+[    3.006019] apex 0000:04:00.0: Couldn't initialize interrupts: -28
+[    8.157414] apex 0000:04:00.0: Apex performance not throttled due to temperature
+[    8.157424] apex 0000:03:00.0: Apex performance not throttled due to temperature
+[  230.889009] apex: unknown parameter 'interrupt_mode' ignored
+[  230.889866] apex 0000:03:00.0: Couldn't initialize interrupts: -28
+[  230.891734] apex 0000:04:00.0: Couldn't initialize interrupts: -28
+
+
+
