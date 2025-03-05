@@ -37,7 +37,13 @@ def get_models():
 
 def load_model(model_name: str):
     model_path = Path.cwd() / "models" / model_name
-    interpreter = Interpreter(model_path=model_path)
+    if "edgetpu" in model_path.name:
+        interpreter = Interpreter(
+            model_path=model_path.as_posix(),
+            experimental_delegates=[load_delegate("libedgetpu.so.1")])
+    else:
+        interpreter = Interpreter(model_path=model_path.as_posix())
+
     interpreter.allocate_tensors()
 
     return interpreter
@@ -52,25 +58,24 @@ def start_app():
     st.header("Turn any Python script into a compelling web app 🐦🐦‍⬛🐓🦉🦅")
     st.button("Rerun")
 
-    available_models = get_models()
-    st.text("Available models:")
-    st.write(available_models)
+    left_column, right_column = st.columns(2)
 
-    selected_model = st.selectbox(
+    available_models = get_models()
+    # st.text("Available models:")
+    # st.write(available_models)
+    # with left_column:
+    selected_model = st.sidebar.selectbox(
         "Select model",
         available_models,
         index=available_models.index("efficientdet_lite0.tflite"))
 
-    model_path = Path.cwd() / "models" / selected_model
-    st.write(model_path, model_path.exists(), model_path.as_posix())
-
-    # left_column, right_column = st.columns(2)
+    interpreter = load_model(selected_model)
 
     # st.write("Double click to save crop")
-    # uploaded_image = st.sidebar.file_uploader(
-    #     "Choose an image...",
-    #     type=["png", "jpg", "jpeg"],
-    # )
+    uploaded_image = st.sidebar.file_uploader(
+        "Choose an image...",
+        type=["png", "jpg", "jpeg"],
+    )
     # cropped_image = None
 
     # if uploaded_image is not None:
