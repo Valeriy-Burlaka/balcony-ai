@@ -286,4 +286,18 @@ rmmod: ERROR: could not remove module gasket: Device or resource busy
 [  230.891734] apex 0000:04:00.0: Couldn't initialize interrupts: -28
 
 
+# Backup and de-compile the device tree for inspection (bcm2712 is the main device tree on Raspberry Pi 5 Model B
+# cat /proc/device-tree/mode
+# or
+# cat /sys/firmware/devicetree/base/model
+# Raspberry Pi 5 Model B Rev 1.0
 
+sudo cp /boot/firmware/bcm2712-rpi-5-b.dtb /boot/firmware/bcm2712-rpi-5-b.dtb.bak
+
+dtc -I dtb -O dts /boot/firmware/bcm2712-rpi-5-b.dtb -o ~/test.dts
+
+# Re-compile the device tree and move it back
+
+dtc -I dts -O dtb ~/test.dts -o ~/test.dtb
+
+sudo mv ~/test.dtb /boot/firmware/bcm2712-rpi-5-b.dtb

@@ -33,7 +33,13 @@ The best!
 * Recording [audio](https://www.circuitbasics.com/how-to-record-audio-with-the-raspberry-pi/)
 * [Controlling Arduino](https://www.circuitbasics.com/using-raspberry-pi-to-control-arduino-with-firmata/)
 
-# TFLite examples
+# TFLite
+
+## In use
+
+[2.16.1](https://github.com/tensorflow/tensorflow/tree/v2.16.1)
+
+## Examples
 
 * https://github.com/raspberrypi/picamera2/tree/main/examples/tensorflow
 
