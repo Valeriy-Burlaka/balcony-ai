@@ -139,6 +139,7 @@ def start_app():
             classes=classes[0],
             scores=scores[0],
             selected_classes=COCO_LABELS.values(),
+            score_threshold=0.0,
         )
         # annotated = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
 
