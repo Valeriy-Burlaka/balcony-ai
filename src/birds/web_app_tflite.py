@@ -31,9 +31,16 @@ from birds.lib.logger import get_logger, update_app_verbosity_level
 
 def get_models():
     models_dir = Path.cwd() / "models" # todo: __init__.py in the `models` dir setting path & import
-    models = [p.as_posix() for p in models_dir.glob("*.tflite")]
+    models = [p.name for p in models_dir.glob("*.tflite")]
 
     return models
+
+def load_model(model_name: str):
+    model_path = Path.cwd() / "models" / model_name
+    interpreter = Interpreter(model_path=model_path)
+    interpreter.allocate_tensors()
+
+    return interpreter
 
 
 def start_app():
@@ -43,13 +50,19 @@ def start_app():
         page_icon="🦉"
     )
     st.header("Turn any Python script into a compelling web app 🐦🐦‍⬛🐓🦉🦅")
-    # st.button("Rerun")
+    st.button("Rerun")
 
     available_models = get_models()
     st.text("Available models:")
     st.write(available_models)
 
-    selected_model = st.selectbox("Select model", available_models, index=0)
+    selected_model = st.selectbox(
+        "Select model",
+        available_models,
+        index=available_models.index("efficientdet_lite0.tflite"))
+
+    model_path = Path.cwd() / "models" / selected_model
+    st.write(model_path, model_path.exists(), model_path.as_posix())
 
     # left_column, right_column = st.columns(2)
 
