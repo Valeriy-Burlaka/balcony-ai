@@ -63,9 +63,6 @@ def start_app():
     left_column, right_column = st.columns(2)
 
     available_models = get_models()
-    # st.text("Available models:")
-    # st.write(available_models)
-    # with left_column:
     selected_model = st.sidebar.selectbox(
         "Select model",
         available_models,
@@ -75,29 +72,27 @@ def start_app():
     st.sidebar.write(f"Model loaded in {t_spent} seconds")
     st.sidebar.write(f"Model input shape: {interpreter.get_input_details()}")
 
-    # st.write("Double click to save crop")
+    st.write("Double click to save crop")
     uploaded_image = st.sidebar.file_uploader(
         "Choose an image...",
         type=["png", "jpg", "jpeg"],
     )
-    # cropped_image = None
+    cropped_image = None
 
-    # if uploaded_image is not None:
-    #     img = Image.open(uploaded_image)
-    #     with left_column:
-    #         cropped_image = st_cropper(
-    #             img_file=img,
-    #             aspect_ratio=(1, 1),
-    #             realtime_update=False,
-    #             # should_resize_image=False,
-    #             stroke_width=2,
-    #         )
-    #         # st.image(uploaded_image, caption="Uploaded image", use_column_width=True)
-    #     with left_column:
-    #         _ = cropped_image.thumbnail((IMG_SIZE_FOR_DETECTOR, IMG_SIZE_FOR_DETECTOR))
-    #         st.image(cropped_image, caption="Cropped image")
+    if uploaded_image is not None:
+        img = Image.open(uploaded_image)
+        with left_column:
+            cropped_image = st_cropper(
+                img_file=img,
+                aspect_ratio=(1, 1),
+                realtime_update=False,
+                stroke_width=2,
+            )
+            # st.image(uploaded_image, caption="Uploaded image", use_column_width=True)
+        with left_column:
+            _ = cropped_image.thumbnail((640, 640))
+            st.image(cropped_image, caption="Cropped image")
 
-    # model = load_model()
 
     # print("Cropped image: ", cropped_image)
     # if uploaded_image is not None:
@@ -152,3 +147,43 @@ def start_app():
 
 if __name__ == "__main__":
     start_app()
+
+# t2 = time.monotonic()
+#     image = cv2.imread(test_img)
+#     print("Time spent for reading the image: ", time.monotonic() - t2)
+#     input_shape = input_details[0]['shape']
+
+#     #required_size = (input_shape[1], input_shape[2])  # Usually 320x320 for EfficientDet-Lite0
+#     required_size = (640, 640)  # Usually 320x320 for EfficientDet-Lite0
+
+#     # Resize and normalize image
+#     t3 = time.monotonic()
+#     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+#     image_resized = cv2.resize(image_rgb, required_size)
+#     input_data = np.expand_dims(image_resized, axis=0)
+#     print("Time spent to prepare the image: ", time.monotonic() - t3)
+
+#     # IMPORTANT: Do NOT normalize to [-1, 1]. The model expects uint8 and handles normalization internally.
+#     #input_data = (input_data.astype(np.float32) / 127.5) - 1  # Normalize to [-1, 1]
+
+#     # Run inference
+#     t4 = time.monotonic()
+#     interpreter.set_tensor(input_details[0]['index'], input_data)
+#     interpreter.invoke()
+#     print("Time spent for inference: ", time.monotonic() - t4)
+
+#     # Get results
+#     boxes = interpreter.get_tensor(output_details[0]['index'])
+#     classes = interpreter.get_tensor(output_details[1]['index'])
+#     print(classes)
+#     scores = interpreter.get_tensor(output_details[2]['index'])
+#     print(scores)
+#     num_detections = interpreter.get_tensor(output_details[3]['index'])
+
+#     # Process results (example: print detections above 0.5 confidence)
+#     for i in range(int(num_detections[0])):
+#         if scores[0][i] > 0.3:
+#             print(f"Detection {i}:")
+#             print(f"  Class: {int(classes[0][i])}")
+#             print(f"  Score: {scores[0][i]}")
+#             print(f"  Box: {boxes[0][i]}")
