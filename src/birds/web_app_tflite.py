@@ -126,16 +126,16 @@ def start_app():
         scores = interpreter.get_tensor(output_details[2]['index'])
         num_detections = interpreter.get_tensor(output_details[3]['index'])
         st.sidebar.write(f"Number of detections: {num_detections}")
-        st.sidebar.write(f"Classes: {classes}")
-        st.sidebar.write(f"Scores: {scores}")
-        st.sidebar.write(f"Boxes: {boxes}")
+        st.sidebar.write(f"Classes: {classes[0]}")
+        st.sidebar.write(f"Scores: {scores[0]}")
+        st.sidebar.write(f"Boxes: {boxes[0]}")
 
 
         annotated = annotate_image_with_selected_classes(
             image=image_rgb,
-            boxes=boxes,
-            classes=classes,
-            scores=scores,
+            boxes=boxes[0],
+            classes=classes[0],
+            scores=scores[0],
             selected_classes=COCO_LABELS.values(),
         )
         # annotated = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
