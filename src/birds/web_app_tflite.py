@@ -14,7 +14,7 @@ from birds.lib.image_detection import (
     annotate_image_with_selected_classes,
     IMG_SIZE_FOR_DETECTOR,
 )
-from birds.lib.image_preprocessing import normalize_for_tf, preprocess_image
+# from birds.lib.image_preprocessing import normalize_for_tf, preprocess_image
 from birds.lib.logger import get_logger, update_app_verbosity_level
 # from birds.lib.tf_models import load_model as _load_model
 
