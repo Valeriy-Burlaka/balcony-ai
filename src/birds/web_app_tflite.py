@@ -16,18 +16,11 @@ from tflite_runtime.interpreter import Interpreter, load_delegate
 # )
 # from birds.lib.image_preprocessing import normalize_for_tf, preprocess_image
 from birds.lib.logger import get_logger, update_app_verbosity_level
-# from birds.lib.tf_models import load_model as _load_model
 
 
 # logger = get_logger("web_app", verbosity=2)
 # update_app_verbosity_level(verbosity=2)
 
-
-# @st.cache_resource
-# def create_interpreter():
-#     interpreter = Interpreter(model_path="efficientdet_lite0.tflite")
-#     interpreter.allocate_tensors()
-#     return interpreter
 
 def get_models():
     models_dir = Path.cwd() / "models" # todo: __init__.py in the `models` dir setting path & import
@@ -35,6 +28,7 @@ def get_models():
 
     return models
 
+@st.cache_resource
 def load_model(model_name: str):
     t1 = time.monotonic()
     model_path = Path.cwd() / "models" / model_name
@@ -48,7 +42,21 @@ def load_model(model_name: str):
     interpreter.allocate_tensors()
     t_spent = time.monotonic() - t1
 
-    return interpreter, t_spent
+    input_details = interpreter.get_input_details()
+    input_shape = input_details[0]['shape']
+    required_size = (input_shape[1], input_shape[2])
+
+    return interpreter, required_size, t_spent
+
+
+def attach_model_picker(app):
+    available_models = get_models()
+    selected_model = st.sidebar.selectbox(
+        "Select model",
+        available_models,
+        index=available_models.index("efficientdet_lite0.tflite"))
+
+    return selected_model
 
 
 def start_app():
@@ -62,17 +70,12 @@ def start_app():
 
     left_column, right_column = st.columns(2)
 
-    available_models = get_models()
-    selected_model = st.sidebar.selectbox(
-        "Select model",
-        available_models,
-        index=available_models.index("efficientdet_lite0.tflite"))
+    selected_model = attach_model_picker(st)
+    interpreter, required_size, t_spent = load_model(selected_model)
 
-    interpreter, t_spent = load_model(selected_model)
     st.sidebar.write(f"Model loaded in {t_spent} seconds")
-    st.sidebar.write(f"Model input shape: {interpreter.get_input_details()}")
+    st.sidebar.write(f"Model input details: {interpreter.get_input_details()}")
 
-    st.write("Double click to save crop")
     uploaded_image = st.sidebar.file_uploader(
         "Choose an image...",
         type=["png", "jpg", "jpeg"],
@@ -82,6 +85,8 @@ def start_app():
     if uploaded_image is not None:
         img = Image.open(uploaded_image)
         with left_column:
+            st.write("Double click to save crop")
+
             cropped_image = st_cropper(
                 img_file=img,
                 aspect_ratio=(1, 1),
@@ -90,13 +95,38 @@ def start_app():
             )
             # st.image(uploaded_image, caption="Uploaded image", use_column_width=True)
         with left_column:
-            _ = cropped_image.thumbnail((640, 640))
+            _ = cropped_image.thumbnail((required_size[0], required_size[1]))
             st.image(cropped_image, caption="Cropped image")
 
 
     # print("Cropped image: ", cropped_image)
-    # if uploaded_image is not None:
-    #     uploaded_image_data = np.asarray(bytearray(uploaded_image.getvalue()))
+
+
+    if uploaded_image is not None:
+        # Resize and normalize image
+        t_convert = time.monotonic()
+        image = np.asarray(bytearray(uploaded_image.getvalue()))
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image_resized = cv2.resize(image_rgb, required_size)
+        input_data = np.expand_dims(image_resized, axis=0)
+        st.sidebar.write(f"Image pre-processed in {time.monotonic() - t_convert} seconds")
+
+        # Run inference
+        t_inference = time.monotonic()
+        interpreter.set_tensor(0, input_data)
+        interpreter.invoke()
+        st.sidebar.write("Time spent for inference: ", time.monotonic() - t_inference)
+
+        # Get results
+        output_details = interpreter.get_output_details()
+        boxes = interpreter.get_tensor(output_details[0]['index'])
+        classes = interpreter.get_tensor(output_details[1]['index'])
+        scores = interpreter.get_tensor(output_details[2]['index'])
+        num_detections = interpreter.get_tensor(output_details[3]['index'])
+        st.sidebar.write(f"Number of detections: {num_detections}")
+        st.sidebar.write(f"Classes: {classes}")
+        st.sidebar.write(f"Scores: {scores}")
+        st.sidebar.write(f"Boxes: {boxes}")
 
     #     original_image_as_ndarray = cv2.imdecode(uploaded_image_data, cv2.IMREAD_COLOR)
     #     prepocessed = preprocess_image(original_image_as_ndarray, target_size=IMG_SIZE_FOR_DETECTOR)
