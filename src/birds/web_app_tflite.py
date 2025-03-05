@@ -1,5 +1,5 @@
 from pathlib import Path
-import os
+import time
 
 import cv2
 
@@ -36,6 +36,7 @@ def get_models():
     return models
 
 def load_model(model_name: str):
+    t1 = time.monotonic()
     model_path = Path.cwd() / "models" / model_name
     if "edgetpu" in model_path.name:
         interpreter = Interpreter(
@@ -45,8 +46,9 @@ def load_model(model_name: str):
         interpreter = Interpreter(model_path=model_path.as_posix())
 
     interpreter.allocate_tensors()
+    t_spent = time.monotonic() - t1
 
-    return interpreter
+    return interpreter, t_spent
 
 
 def start_app():
@@ -69,7 +71,9 @@ def start_app():
         available_models,
         index=available_models.index("efficientdet_lite0.tflite"))
 
-    interpreter = load_model(selected_model)
+    interpreter, t_spent = load_model(selected_model)
+    st.sidebar.write(f"Model loaded in {t_spent} seconds")
+    st.sidebar.write(f"Model input shape: {interpreter.get_input_details()}")
 
     # st.write("Double click to save crop")
     uploaded_image = st.sidebar.file_uploader(
