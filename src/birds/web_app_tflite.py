@@ -107,8 +107,10 @@ def start_app():
     if uploaded_image is not None:
         # Resize and normalize image
         t_convert = time.monotonic()
-        image = np.asarray(bytearray(uploaded_image.getvalue()))
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        uploaded_image_data = np.asarray(bytearray(uploaded_image.getvalue()))
+        original_image_as_ndarray = cv2.imdecode(uploaded_image_data, cv2.IMREAD_COLOR)
+
+        image_rgb = cv2.cvtColor(original_image_as_ndarray, cv2.COLOR_BGR2RGB)
         image_resized = cv2.resize(image_rgb, required_size)
         input_data = np.expand_dims(image_resized, axis=0)
         st.sidebar.write(f"Image pre-processed in {time.monotonic() - t_convert} seconds")
