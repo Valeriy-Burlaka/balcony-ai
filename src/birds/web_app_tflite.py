@@ -15,6 +15,8 @@ from tflite_runtime.interpreter import Interpreter, load_delegate
 #     IMG_SIZE_FOR_DETECTOR,
 # )
 # from birds.lib.image_preprocessing import normalize_for_tf, preprocess_image
+from birds.lib.coco_labels import COCO_LABELS
+from birds.lib.image_postprocessing import annotate_image_with_selected_classes
 from birds.lib.logger import get_logger, update_app_verbosity_level
 
 
@@ -128,24 +130,18 @@ def start_app():
         st.sidebar.write(f"Scores: {scores}")
         st.sidebar.write(f"Boxes: {boxes}")
 
-    #     original_image_as_ndarray = cv2.imdecode(uploaded_image_data, cv2.IMREAD_COLOR)
-    #     prepocessed = preprocess_image(original_image_as_ndarray, target_size=IMG_SIZE_FOR_DETECTOR)
-    #     normalized = normalize_for_tf(image=prepocessed)
-    #     detector_output = model(normalized)
-    #     boxes = detector_output["detection_boxes"][0].numpy()
-    #     classes = detector_output["detection_classes"][0].numpy()
-    #     scores = detector_output["detection_scores"][0].numpy()
 
-    #     annotated = annotate_image_with_selected_classes(
-    #         image=original_image_as_ndarray,
-    #         boxes=boxes,
-    #         classes=classes,
-    #         scores=scores,
-    #     )
-    #     annotated = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
+        annotated = annotate_image_with_selected_classes(
+            image=image_rgb,
+            boxes=boxes,
+            classes=classes,
+            scores=scores,
+            selected_classes=COCO_LABELS.values(),
+        )
+        # annotated = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
 
-    #     with right_column:
-    #         st.image(annotated, caption="To hell and back")
+        with right_column:
+            st.image(annotated, caption="To hell and back")
 
     # if cropped_image is not None:
     #     cropped_image_as_ndarray = np.array(cropped_image, dtype=np.uint8)

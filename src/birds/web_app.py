@@ -6,8 +6,8 @@ import streamlit as st
 from PIL import Image
 from streamlit_cropper import st_cropper
 
+from birds.lib.annotate_image_with_selected_classes import annotate_image_with_selected_classes
 from birds.lib.image_detection import (
-    annotate_image_with_selected_classes,
     IMG_SIZE_FOR_DETECTOR,
 )
 from birds.lib.image_preprocessing import normalize_for_tf, preprocess_image
