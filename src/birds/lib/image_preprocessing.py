@@ -2,7 +2,6 @@ import os
 
 import cv2
 import numpy as np
-import tensorflow as tf
 
 from birds.lib.colors import COLOR_GRAY
 
@@ -57,11 +56,11 @@ def preprocess_image(image: np.ndarray, target_size: int) -> np.ndarray:
 def normalize_for_tf(image: np.ndarray) -> np.ndarray:
     # image = image / 255.0  # not required by efficientdet d2, although I don't see a Rescaling layer in it either :shrug:
 
-    # The operation tf.expand_dims(sample_image_t, axis=0) in TF adds a new dimension to the tensor T at the specified (0) axis.
+    # The operation np.expand_dims(sample_image_t, axis=0) adds a new dimension to the tensor T at the specified (0) axis.
     # If the `normalized` image originally had a shape of (640, 640, 3), after applying tf.expand_dims(sample_image_t, axis=0),
     # its new shape becomes (1, 640, 640, 3), effectively turning it into a "batch" of one image.
     #  (Read more details here: https://claude.ai/chat/3805017f-9196-4989-9c66-0d3309a4f4df)
-    image = tf.expand_dims(image, axis=0)
+    image = np.expand_dims(image, axis=0)
 
     return image
 
