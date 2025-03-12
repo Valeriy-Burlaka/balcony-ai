@@ -35,9 +35,9 @@ The best!
 
 # TFLite
 
-## In use
-
-[2.16.1](https://github.com/tensorflow/tensorflow/tree/v2.16.1)
+* [Docs](https://www.tensorflow.org/api_docs/python/tf/lite/Interpreter)
+* In use — [2.16.1](https://github.com/tensorflow/tensorflow/tree/v2.16.1)
+* [Converter](https://android.googlesource.com/platform/external/tensorflow/+/ec63214f098a2bfc87b628219ad0718750d4e930/tensorflow/lite/g3doc/guide/get_started.md)
 
 ## Examples
 
