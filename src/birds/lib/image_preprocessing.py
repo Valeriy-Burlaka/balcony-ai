@@ -31,6 +31,10 @@ def letterbox_landscape_image_to_square(image: np.ndarray) -> np.ndarray:
 
 def downsample_image(image: np.ndarray, target_size: int) -> np.ndarray:
     img_height, img_width = image.shape[:2]
+
+    if img_height == img_width == target_size:
+        return image
+
     if img_height != img_width:
         raise ValueError("Attempting to downsample a non-square image")
 
