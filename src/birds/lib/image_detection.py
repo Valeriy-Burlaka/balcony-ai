@@ -251,37 +251,6 @@ def denormalize_box_coordinates(box: Box, input_img_width: int, input_img_height
 
     return Box(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
 
-# def get_annotated_img_objects(img, boxes, scores, classes, score_threshold=0.25, label_map=None):
-#     num_objects = 0
-
-#     for box, cls, score in zip(boxes, classes, scores):
-#         if score >= score_threshold:
-#             y_min, x_min, y_max, x_max = box
-#             box = denormalize_box_coordinates(Box(x_min=x_min, y_min=y_min, x_max=x_max, y_max=y_max))
-
-#             cv2.rectangle(
-#                 img,
-#                 (box.x_min, box.y_min),
-#                 (box.x_max, box.y_max),
-#                 color=BGR_COLOR_RED,
-#                 thickness=1,
-#             )
-
-#             if label_map:
-#                 label = label_map[int(cls)]
-#                 cv2.putText(
-#                     img,
-#                     f"{label}: {score:.2f}",
-#                     (box.x_min, box.y_min - 10),
-#                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-#                     fontScale=0.9,
-#                     color=BGR_COLOR_LIME,
-#                     thickness=2,
-#                 )
-
-#             num_objects += 1
-
-#     return img, num_objects
 
 def detect(model, image: Path) -> SingleDetectionResult:
     with timeit("Reading image") as t_spent:
