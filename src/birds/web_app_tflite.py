@@ -17,6 +17,7 @@ from tflite_runtime.interpreter import Interpreter, load_delegate
 # from birds.lib.image_preprocessing import normalize_for_tf, preprocess_image
 from birds.lib.coco_labels import COCO_LABELS
 from birds.lib.image_postprocessing import annotate_image_with_selected_classes
+from birds.lib.image_preprocessing import normalize_for_tf, preprocess_image
 from birds.lib.logger import get_logger, update_app_verbosity_level
 
 
@@ -51,9 +52,9 @@ def load_model(model_name: str):
     return interpreter, required_size, t_spent
 
 
-def attach_model_picker(app):
+def attach_model_picker(parent):
     available_models = get_models()
-    selected_model = st.sidebar.selectbox(
+    selected_model = parent.selectbox(
         "Select model",
         available_models,
         index=available_models.index("efficientdet_lite0.tflite"))
@@ -68,11 +69,10 @@ def start_app():
         page_icon="🦉"
     )
     st.header("Turn any Python script into a compelling web app 🐦🐦‍⬛🐓🦉🦅")
-    st.button("Rerun")
 
     left_column, right_column = st.columns(2)
 
-    selected_model = attach_model_picker(st)
+    selected_model = attach_model_picker(st.sidebar)
     interpreter, required_size, t_spent = load_model(selected_model)
 
     st.sidebar.write(f"Model loaded in {t_spent} seconds")
@@ -104,25 +104,32 @@ def start_app():
     # print("Cropped image: ", cropped_image)
 
 
-    if uploaded_image is not None:
+    if st.button("Run Inference", disabled=(uploaded_image is None)):
         # Resize and normalize image
         t_convert = time.monotonic()
+
         uploaded_image_data = np.asarray(bytearray(uploaded_image.getvalue()))
         original_image_as_ndarray = cv2.imdecode(uploaded_image_data, cv2.IMREAD_COLOR)
+        st.sidebar.write(f"Original image shape: {original_image_as_ndarray.shape}")
 
-        image_rgb = cv2.cvtColor(original_image_as_ndarray, cv2.COLOR_BGR2RGB)
-        image_resized = cv2.resize(image_rgb, required_size)
-        input_data = np.expand_dims(image_resized, axis=0)
+        preprocessed = preprocess_image(original_image_as_ndarray, target_size=required_size[0])
+        with right_column:
+            st.image(preprocessed, caption="Preprocessed image")
+
+        normalized = normalize_for_tf(preprocessed)
+
         st.sidebar.write(f"Image pre-processed in {time.monotonic() - t_convert} seconds")
 
         # Run inference
         t_inference = time.monotonic()
-        interpreter.set_tensor(0, input_data)
+        interpreter.set_tensor(0, normalized)
         interpreter.invoke()
         st.sidebar.write("Time spent for inference: ", time.monotonic() - t_inference)
 
         # Get results
         output_details = interpreter.get_output_details()
+        st.sidebar.write(f"Output details: {output_details}")
+
         boxes = interpreter.get_tensor(output_details[0]['index'])
         classes = interpreter.get_tensor(output_details[1]['index'])
         scores = interpreter.get_tensor(output_details[2]['index'])
@@ -134,17 +141,16 @@ def start_app():
 
 
         annotated = annotate_image_with_selected_classes(
-            image=image_rgb,
+            image=cv2.cvtColor(original_image_as_ndarray, cv2.COLOR_BGR2RGB),
             boxes=boxes[0],
             classes=classes[0],
             scores=scores[0],
             selected_classes=COCO_LABELS.values(),
             score_threshold=0.0,
         )
-        # annotated = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
 
         with right_column:
-            st.image(annotated, caption="To hell and back")
+            st.image(annotated, caption="Detection results")
 
     # if cropped_image is not None:
     #     cropped_image_as_ndarray = np.array(cropped_image, dtype=np.uint8)
